@@ -1,0 +1,187 @@
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import { Menu, X, Globe, ChevronDown, Shield } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import type { Language } from "@/lib/translations";
+
+const langLabels: Record<Language, string> = { fr: "FR", en: "EN", ar: "عربي" };
+const langFull: Record<Language, string> = { fr: "Français", en: "English", ar: "العربية" };
+
+const Header = () => {
+  const { lang, setLang, t } = useLanguage();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => setIsAdmin(data === true));
+  }, [user?.id]);
+
+  const links = [
+    { to: "/", label: t("nav.home") as string },
+    { to: "/concierge", label: t("nav.concierge") as string },
+    { to: "/designers", label: t("nav.designers") as string },
+    { to: "/calculator", label: t("nav.calculator") as string },
+    { to: "/contact", label: t("nav.contact") as string },
+  ];
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <div className="container flex h-16 items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <img
+            src="/balihany-logo.png"
+            alt="BaliHany"
+            className="h-10 w-10 object-contain"
+          />
+          <span className="text-2xl font-extrabold tracking-tight text-foreground">
+            BaliHany
+          </span>
+        </Link>
+
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-8 md:flex">
+          {links.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`text-sm font-medium transition-colors hover:text-accent ${
+                location.pathname === link.to ? "text-accent" : "text-muted-foreground"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hidden items-center gap-3 md:flex">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary">
+                <Globe className="h-4 w-4" />
+                {langLabels[lang]}
+                <ChevronDown className="h-3 w-3" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {(Object.keys(langFull) as Language[]).filter(l => l !== lang).map(l => (
+                <DropdownMenuItem key={l} onClick={() => setLang(l)}>
+                  {langFull[l]}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {user ? (
+            <>
+              {isAdmin && (
+                <Button asChild variant="ghost" size="sm" className="gap-1.5">
+                  <Link to="/admin">
+                    <Shield className="h-4 w-4" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/dashboard">{t("nav.dashboard") as string}</Link>
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-full" onClick={handleLogout}>
+                {t("nav.logout") as string}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/login">{t("nav.login") as string}</Link>
+              </Button>
+              <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full">
+                <Link to="/concierge-signup">{t("nav.signup") as string}</Link>
+              </Button>
+            </>
+          )}
+        </div>
+
+        <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
+
+      {mobileOpen && (
+        <nav className="border-t border-border bg-card px-6 py-4 md:hidden">
+          <div className="flex flex-col gap-4">
+            {links.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setMobileOpen(false)}
+                className={`text-sm font-medium ${
+                  location.pathname === link.to ? "text-accent" : "text-muted-foreground"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Admin
+                  </Link>
+                )}
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground">
+                  {t("nav.dashboard") as string}
+                </Link>
+                <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="text-sm font-medium text-muted-foreground text-start">
+                  {t("nav.logout") as string}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground">
+                  {t("nav.login") as string}
+                </Link>
+                <Link to="/concierge-signup" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-accent">
+                  {t("nav.signup") as string}
+                </Link>
+              </>
+            )}
+            <div className="flex gap-2">
+              {(Object.keys(langFull) as Language[]).map(l => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={`text-sm font-medium px-2 py-1 rounded-full ${l === lang ? "bg-accent/10 text-accent" : "text-muted-foreground"}`}
+                >
+                  {langLabels[l]}
+                </button>
+              ))}
+            </div>
+          </div>
+        </nav>
+      )}
+    </header>
+  );
+};
+
+export default Header;

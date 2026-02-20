@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* BALIHANY brand: warm golden amber #EAA72E */
+    --balihany-gold: 39 82% 55%;
+
+    --background: 40 25% 98%;
+    --foreground: 24 18% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 24 18% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 18% 12%;
+
+    --primary: 24 18% 12%;
+    --primary-foreground: 40 25% 98%;
+
+    --secondary: 39 40% 94%;
+    --secondary-foreground: 24 18% 12%;
+
+    --muted: 39 30% 94%;
+    --muted-foreground: 24 12% 45%;
+
+    --accent: 39 82% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --terracotta: 32 70% 50%;
+    --terracotta-foreground: 0 0% 100%;
+    --terracotta-light: 39 60% 93%;
+
+    --green-light: 39 50% 93%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 39 25% 90%;
+    --input: 39 25% 90%;
+    --ring: 39 82% 55%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 40 25% 98%;
+    --sidebar-foreground: 24 18% 12%;
+    --sidebar-primary: 39 82% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 39 50% 93%;
+    --sidebar-accent-foreground: 24 18% 12%;
+    --sidebar-border: 39 25% 90%;
+    --sidebar-ring: 39 82% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-sans font-bold tracking-tight;
+  }
+
+  [dir="rtl"] {
+    font-family: 'Noto Sans Arabic', 'Plus Jakarta Sans', sans-serif;
+  }
+}
