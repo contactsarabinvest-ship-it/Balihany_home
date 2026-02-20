@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Building2, Paintbrush, Calculator, ArrowRight } from "lucide-react";
+import { Building2, Paintbrush, Sparkles, Calculator, ArrowRight } from "lucide-react";
 
 const DirectoriesSection = () => {
   const { t } = useLanguage();
@@ -16,6 +16,15 @@ const DirectoriesSection = () => {
       to: "/concierge",
       color: "bg-accent/10",
       iconColor: "text-accent",
+    },
+    {
+      icon: Sparkles,
+      title: t("directories.menage.title") as string,
+      desc: t("directories.menage.desc") as string,
+      cta: t("directories.menage.cta") as string,
+      to: "/menage",
+      color: "bg-cyan-500/10",
+      iconColor: "text-cyan-600",
     },
     {
       icon: Paintbrush,
@@ -43,7 +52,7 @@ const DirectoriesSection = () => {
         <h2 className="mb-16 text-center text-3xl font-bold text-foreground md:text-4xl">
           {t("directories.title") as string}
         </h2>
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {cards.map((card, i) => (
             <motion.div
               key={i}

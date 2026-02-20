@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Mail, Calculator } from "lucide-react";
+import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Mail, Calculator, Star, MessageSquare } from "lucide-react";
 
 const AdminDashboard = () => {
   const { t } = useLanguage();
@@ -107,6 +107,45 @@ const AdminDashboard = () => {
     },
     enabled: !!userId && isAdmin === true,
   });
+
+  const { data: pendingReviews } = useQuery({
+    queryKey: ["admin-pending-reviews", userId, isAdmin],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId && isAdmin === true,
+  });
+
+  const approveReview = async (reviewId: string) => {
+    setProcessing(reviewId);
+    const { error } = await supabase.from("reviews").update({ status: "approved" }).eq("id", reviewId);
+    setProcessing(null);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Review approved" });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-reviews"] });
+    queryClient.invalidateQueries({ queryKey: ["reviews"] });
+  };
+
+  const rejectReview = async (reviewId: string) => {
+    setProcessing(reviewId);
+    const { error } = await supabase.from("reviews").update({ status: "rejected" }).eq("id", reviewId);
+    setProcessing(null);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Review rejected" });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-reviews"] });
+  };
 
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString(undefined, { dateStyle: "medium" });
 
@@ -240,7 +279,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="companies" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-3">
+          <TabsList className="grid w-full max-w-3xl grid-cols-4">
             <TabsTrigger value="companies">
               Companies
               {(pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0) > 0 && (
@@ -254,6 +293,14 @@ const AdminDashboard = () => {
               {(itemsWithPendingPhotos?.length ?? 0) > 0 && (
                 <Badge variant="secondary" className="ml-2">
                   {itemsWithPendingPhotos?.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="reviews">
+              Avis
+              {(pendingReviews?.length ?? 0) > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {pendingReviews?.length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -464,6 +511,74 @@ const AdminDashboard = () => {
             ))}
           </div>
         )}
+          </TabsContent>
+
+          <TabsContent value="reviews" className="space-y-6">
+            {!pendingReviews?.length ? (
+              <Card className="rounded-2xl">
+                <CardContent className="py-12 text-center">
+                  <MessageSquare className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <p className="text-muted-foreground">Aucun avis en attente de modération.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {pendingReviews.map((r) => (
+                  <Card key={r.id} className="rounded-xl">
+                    <CardContent className="py-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-medium">{r.author_name}</span>
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-4 w-4 ${star <= r.rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{r.comment}</p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {r.concierge_company_id ? "Concierge" : "Designer"}
+                            </Badge>
+                            <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
+                              <Link to={r.concierge_company_id ? `/concierge/${r.concierge_company_id}` : `/designers/${r.designer_id}`}>
+                                Voir le profil
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            className="gap-1.5 rounded-full bg-green-600 hover:bg-green-700"
+                            onClick={() => approveReview(r.id)}
+                            disabled={!!processing}
+                          >
+                            <Check className="h-4 w-4" />
+                            Approuver
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 rounded-full text-destructive hover:bg-destructive/10"
+                            onClick={() => rejectReview(r.id)}
+                            disabled={!!processing}
+                          >
+                            <X className="h-4 w-4" />
+                            Rejeter
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">{formatDate(r.created_at)}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="leads" className="space-y-6">

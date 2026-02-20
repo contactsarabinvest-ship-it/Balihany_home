@@ -4,6 +4,7 @@ export const translations = {
   // Nav
   "nav.home": { fr: "Accueil", en: "Home", ar: "الرئيسية" },
   "nav.concierge": { fr: "Conciergeries", en: "Concierge", ar: "كونسيرج" },
+  "nav.menage": { fr: "Ménage", en: "Cleaning", ar: "تنظيف" },
   "nav.designers": { fr: "Designers", en: "Designers", ar: "مصممون" },
   "nav.calculator": { fr: "Calculateur", en: "Calculator", ar: "حاسبة" },
   "nav.contact": { fr: "Contact", en: "Contact", ar: "اتصل بنا" },
@@ -30,6 +31,7 @@ export const translations = {
   },
   "hero.cta.concierge": { fr: "Trouver un concierge", en: "Find a Concierge", ar: "ابحث عن كونسيرج" },
   "hero.cta.designer": { fr: "Trouver un designer", en: "Find a Designer", ar: "ابحث عن مصمم" },
+  "hero.cta.menage": { fr: "Services de ménage", en: "Cleaning Services", ar: "خدمات التنظيف" },
   "hero.cta.calculator": { fr: "Calculer la rentabilité", en: "Calculate Profitability", ar: "احسب الربحية" },
 
   // How it works
@@ -69,6 +71,9 @@ export const translations = {
   "directories.concierge.title": { fr: "Annuaire Conciergeries", en: "Concierge Directory", ar: "دليل الكونسيرج" },
   "directories.concierge.desc": { fr: "Trouvez la conciergerie idéale pour gérer votre location.", en: "Find the ideal concierge to manage your rental.", ar: "اعثر على الكونسيرج المثالي لإدارة إيجارك." },
   "directories.concierge.cta": { fr: "Parcourir les conciergeries", en: "Browse Concierge Services", ar: "تصفح خدمات الكونسيرج" },
+  "directories.menage.title": { fr: "Services de ménage", en: "Cleaning Services", ar: "خدمات التنظيف" },
+  "directories.menage.desc": { fr: "Trouvez des prestataires de ménage pour vos locations Airbnb.", en: "Find cleaning services for your Airbnb rentals.", ar: "اعثر على خدمات التنظيف لإيجاراتك على Airbnb." },
+  "directories.menage.cta": { fr: "Parcourir les services", en: "Browse Cleaning Services", ar: "تصفح خدمات التنظيف" },
   "directories.designers.title": { fr: "Annuaire Designers", en: "Designers Directory", ar: "دليل المصممين" },
   "directories.designers.desc": { fr: "Découvrez des designers spécialisés en location courte durée.", en: "Discover designers specialized in short-term rentals.", ar: "اكتشف مصممين متخصصين في الإيجارات القصيرة." },
   "directories.designers.cta": { fr: "Parcourir les designers", en: "Browse Designers", ar: "تصفح المصممين" },
@@ -105,6 +110,22 @@ export const translations = {
   "concierge.portfolio.empty": { fr: "Aucun portfolio ou photo ajouté pour le moment.", en: "No portfolio or photos added yet.", ar: "لم تتم إضافة محفظة أو صور بعد." },
   "concierge.portfolio.urlsHint": { fr: "Liens vers votre site, Behance, etc. (optionnel, séparés par virgule)", en: "Links to your website, Behance, etc. (optional, comma separated)", ar: "روابط لموقعك، Behance، إلخ. (اختياري)" },
   "concierge.portfolio.photosHint": { fr: "URLs d'images de vos réalisations (optionnel)", en: "Image URLs of your work (optional)", ar: "روابط صور أعمالك (اختياري)" },
+
+  // Menage (services de ménage)
+  "menage.title": { fr: "Services de ménage au Maroc", en: "Cleaning Services in Morocco", ar: "خدمات التنظيف في المغرب" },
+  "menage.subtitle": { fr: "Trouvez et comparez les prestataires de ménage pour locations courte durée à travers le Maroc.", en: "Find and compare cleaning service providers for short-term rentals across Morocco.", ar: "ابحث وقارن مزودي خدمات التنظيف للإيجار القصير في المغرب." },
+  "menage.cta.view": { fr: "Voir le profil", en: "View Profile", ar: "عرض الملف" },
+  "menage.cta.contact": { fr: "Contacter", en: "Contact", ar: "تواصل" },
+  "menage.services": { fr: "Services", en: "Services", ar: "الخدمات" },
+  "menage.cities": { fr: "Villes couvertes", en: "Cities Covered", ar: "المدن المغطاة" },
+  "menage.premium": { fr: "Partenaire Premium", en: "Premium Partner", ar: "شريك مميز" },
+  "menage.empty": { fr: "Aucun prestataire ne correspond à vos filtres. Essayez de modifier vos critères ou contactez-nous.", en: "No providers match your filters yet. Try changing your criteria or contact us for help.", ar: "لا يوجد مزودون يطابقون فلاترك. حاول تغيير معاييرك أو تواصل معنا." },
+  "menage.filter.city": { fr: "Filtrer par ville", en: "Filter by city", ar: "تصفية حسب المدينة" },
+  "menage.filter.all": { fr: "Toutes les villes", en: "All cities", ar: "جميع المدن" },
+  "menage.portfolio": { fr: "Portfolio & Réalisations", en: "Portfolio & Work", ar: "المحفظة والأعمال" },
+  "menage.portfolio.urls": { fr: "Liens portfolio", en: "Portfolio links", ar: "روابط المحفظة" },
+  "menage.portfolio.photos": { fr: "Photos de réalisations", en: "Photos of previous work", ar: "صور الأعمال السابقة" },
+
   "reviews.title": { fr: "Avis clients", en: "Client Reviews", ar: "تقييمات العملاء" },
   "reviews.empty": { fr: "Aucun avis pour le moment. Soyez le premier à laisser un commentaire !", en: "No reviews yet. Be the first to leave a comment!", ar: "لا توجد تقييمات بعد. كن أول من يترك تعليقًا!" },
   "reviews.submitTitle": { fr: "Laisser un avis", en: "Leave a review", ar: "ترك تقييم" },
@@ -114,6 +135,7 @@ export const translations = {
   "reviews.comment": { fr: "Votre commentaire", en: "Your comment", ar: "تعليقك" },
   "reviews.count": { fr: "avis", en: "reviews", ar: "تقييمات" },
   "reviews.submitError": { fr: "Impossible de publier l'avis. Vérifiez que la base de données est configurée.", en: "Could not submit review. Check that the database is configured.", ar: "تعذر نشر التقييم." },
+  "reviews.submitPending": { fr: "Merci ! Votre avis a été soumis et sera publié après validation par notre équipe.", en: "Thank you! Your review has been submitted and will be published after our team approves it.", ar: "شكراً! تم إرسال تقييمك وسيتم نشره بعد الموافقة." },
   "form.logo": { fr: "Logo de l'entreprise", en: "Company logo", ar: "شعار الشركة" },
   "form.logoHint": { fr: "PNG, JPG ou WebP, max 10 Mo", en: "PNG, JPG or WebP, max 10MB", ar: "PNG أو JPG أو WebP، حد أقصى 10 ميجا" },
   "form.uploadPhotos": { fr: "Télécharger des photos", en: "Upload photos", ar: "تحميل الصور" },

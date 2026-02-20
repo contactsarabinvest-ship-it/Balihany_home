@@ -58,9 +58,9 @@ const Footer = () => {
               WhatsApp
             </a>
             <div className="flex gap-4">
-              <a href="#" className="opacity-80 hover:opacity-100 transition-opacity"><Instagram className="h-5 w-5" /></a>
-              <a href="#" className="opacity-80 hover:opacity-100 transition-opacity"><Facebook className="h-5 w-5" /></a>
-              <a href="#" className="opacity-80 hover:opacity-100 transition-opacity"><Linkedin className="h-5 w-5" /></a>
+              <a href="https://www.instagram.com/balihany.ma/" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity" aria-label="Instagram"><Instagram className="h-5 w-5" /></a>
+              <a href="https://www.facebook.com/profile.php?id=61588372109062" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity" aria-label="Facebook"><Facebook className="h-5 w-5" /></a>
+              <a href="#" className="opacity-80 hover:opacity-100 transition-opacity" aria-label="LinkedIn"><Linkedin className="h-5 w-5" /></a>
             </div>
           </div>
         </div>

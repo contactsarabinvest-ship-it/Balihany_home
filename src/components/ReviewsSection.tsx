@@ -21,17 +21,18 @@ const reviewSchema = z.object({
 interface ReviewsSectionProps {
   conciergeCompanyId?: string;
   designerId?: string;
+  menageCompanyId?: string;
 }
 
-export function ReviewsSection({ conciergeCompanyId, designerId }: ReviewsSectionProps) {
+export function ReviewsSection({ conciergeCompanyId, designerId, menageCompanyId }: ReviewsSectionProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ author_name: "", rating: 5, comment: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  const column = conciergeCompanyId ? "concierge_company_id" : "designer_id";
-  const targetId = conciergeCompanyId ?? designerId ?? "";
+  const column = conciergeCompanyId ? "concierge_company_id" : designerId ? "designer_id" : "menage_company_id";
+  const targetId = conciergeCompanyId ?? designerId ?? menageCompanyId ?? "";
 
   const { data: reviews = [] } = useQuery({
     queryKey: ["reviews", column, targetId],
@@ -59,12 +60,14 @@ export function ReviewsSection({ conciergeCompanyId, designerId }: ReviewsSectio
       const { error } = await supabase.from("reviews").insert({
         concierge_company_id: conciergeCompanyId || null,
         designer_id: designerId || null,
+        menage_company_id: menageCompanyId || null,
         author_name: parsed.data.author_name,
         rating: parsed.data.rating,
         comment: parsed.data.comment,
+        status: "pending",
       });
       if (error) throw error;
-      toast({ title: t("form.success") as string });
+      toast({ title: t("reviews.submitPending") as string });
       setForm({ author_name: "", rating: 5, comment: "" });
       queryClient.invalidateQueries({ queryKey: ["reviews", column, targetId] });
     } catch (err: unknown) {

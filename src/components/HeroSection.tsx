@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Search, Calculator } from "lucide-react";
+import { ArrowRight, Search, Calculator, Sparkles } from "lucide-react";
 
 const HeroSection = () => {
   const { t } = useLanguage();
@@ -29,7 +29,7 @@ const HeroSection = () => {
           <p className="mb-10 text-sm font-medium text-terracotta">
             {t("hero.social") as string}
           </p>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
             <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2 rounded-full px-8">
               <Link to="/concierge">
                 <Search className="h-4 w-4" />
@@ -40,6 +40,12 @@ const HeroSection = () => {
               <Link to="/designers">
                 {t("hero.cta.designer") as string}
                 <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="gap-2 rounded-full px-8">
+              <Link to="/menage">
+                <Sparkles className="h-4 w-4" />
+                {t("hero.cta.menage") as string}
               </Link>
             </Button>
             <Button asChild variant="ghost" size="lg" className="gap-2 rounded-full px-8">

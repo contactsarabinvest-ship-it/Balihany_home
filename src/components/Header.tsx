@@ -36,6 +36,7 @@ const Header = () => {
   const links = [
     { to: "/", label: t("nav.home") as string },
     { to: "/concierge", label: t("nav.concierge") as string },
+    { to: "/menage", label: t("nav.menage") as string },
     { to: "/designers", label: t("nav.designers") as string },
     { to: "/calculator", label: t("nav.calculator") as string },
     { to: "/contact", label: t("nav.contact") as string },

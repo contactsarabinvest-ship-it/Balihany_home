@@ -50,6 +50,84 @@ export type Database = {
         }
         Relationships: []
       }
+      menage_companies: {
+        Row: {
+          cities_covered_ar: string[]
+          cities_covered_en: string[]
+          cities_covered_fr: string[]
+          city_ar: string
+          city_en: string
+          city_fr: string
+          created_at: string
+          description_ar: string
+          description_en: string
+          description_fr: string
+          experience_years: string | null
+          id: string
+          is_premium: boolean
+          logo_url: string | null
+          name: string
+          portfolio_photos: string[]
+          portfolio_photos_pending: string[]
+          portfolio_urls: string[]
+          services_ar: string[]
+          services_en: string[]
+          services_fr: string[]
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          cities_covered_ar?: string[]
+          cities_covered_en?: string[]
+          cities_covered_fr?: string[]
+          city_ar?: string
+          city_en: string
+          city_fr: string
+          experience_years?: string | null
+          created_at?: string
+          description_ar?: string
+          description_en: string
+          description_fr: string
+          id?: string
+          is_premium?: boolean
+          logo_url?: string | null
+          name: string
+          portfolio_photos?: string[]
+          portfolio_photos_pending?: string[]
+          portfolio_urls?: string[]
+          services_ar?: string[]
+          services_en?: string[]
+          services_fr?: string[]
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          cities_covered_ar?: string[]
+          cities_covered_en?: string[]
+          cities_covered_fr?: string[]
+          city_ar?: string
+          city_en?: string
+          city_fr?: string
+          created_at?: string
+          description_ar?: string
+          description_en?: string
+          description_fr?: string
+          experience_years?: string | null
+          id?: string
+          is_premium?: boolean
+          logo_url?: string | null
+          name?: string
+          portfolio_photos?: string[]
+          portfolio_photos_pending?: string[]
+          portfolio_urls?: string[]
+          services_ar?: string[]
+          services_en?: string[]
+          services_fr?: string[]
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       concierge_companies: {
         Row: {
           cities_covered_ar: string[]
@@ -166,6 +244,7 @@ export type Database = {
           id: string
           concierge_company_id: string | null
           designer_id: string | null
+          menage_company_id: string | null
           author_name: string
           rating: number
           comment: string
@@ -176,6 +255,7 @@ export type Database = {
           id?: string
           concierge_company_id?: string | null
           designer_id?: string | null
+          menage_company_id?: string | null
           author_name: string
           rating: number
           comment: string
@@ -186,6 +266,7 @@ export type Database = {
           id?: string
           concierge_company_id?: string | null
           designer_id?: string | null
+          menage_company_id?: string | null
           author_name?: string
           rating?: number
           comment?: string

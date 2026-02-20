@@ -9,6 +9,8 @@ import Footer from "@/components/Footer";
 import Index from "./pages/Index";
 import ConciergeDirectory from "./pages/ConciergeDirectory";
 import ConciergeProfile from "./pages/ConciergeProfile";
+import MenageDirectory from "./pages/MenageDirectory";
+import MenageProfile from "./pages/MenageProfile";
 import DesignersDirectory from "./pages/DesignersDirectory";
 import DesignerProfile from "./pages/DesignerProfile";
 import ProfitCalculator from "./pages/ProfitCalculator";
@@ -36,6 +38,8 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/concierge" element={<ConciergeDirectory />} />
                 <Route path="/concierge/:id" element={<ConciergeProfile />} />
+                <Route path="/menage" element={<MenageDirectory />} />
+                <Route path="/menage/:id" element={<MenageProfile />} />
                 <Route path="/designers" element={<DesignersDirectory />} />
                 <Route path="/designers/:id" element={<DesignerProfile />} />
                 <Route path="/calculator" element={<ProfitCalculator />} />
