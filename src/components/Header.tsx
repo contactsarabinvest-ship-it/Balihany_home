@@ -33,12 +33,19 @@ const Header = () => {
     supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => setIsAdmin(data === true));
   }, [user?.id]);
 
-  const links = [
-    { to: "/", label: t("nav.home") as string },
+  const findProsPaths = ["/concierge", "/menage", "/designers"];
+  const isFindProsActive = findProsPaths.some((p) => location.pathname === p || location.pathname.startsWith(p + "/"));
+
+  const findProsItems = [
     { to: "/concierge", label: t("nav.concierge") as string },
     { to: "/menage", label: t("nav.menage") as string },
     { to: "/designers", label: t("nav.designers") as string },
+  ];
+
+  const links = [
+    { to: "/", label: t("nav.home") as string },
     { to: "/calculator", label: t("nav.calculator") as string },
+    { to: "/blog", label: t("nav.blog") as string },
     { to: "/contact", label: t("nav.contact") as string },
   ];
 
@@ -62,7 +69,34 @@ const Header = () => {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-8 md:flex">
-          {links.map((link) => (
+          <Link
+            to="/"
+            className={`text-sm font-medium transition-colors hover:text-accent ${
+              location.pathname === "/" ? "text-accent" : "text-muted-foreground"
+            }`}
+          >
+            {t("nav.home") as string}
+          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={`flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-accent ${
+                  isFindProsActive ? "text-accent" : "text-muted-foreground"
+                }`}
+              >
+                {t("nav.findPros") as string}
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {findProsItems.map((item) => (
+                <DropdownMenuItem key={item.to} asChild>
+                  <Link to={item.to}>{item.label}</Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {links.slice(1).map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -130,7 +164,35 @@ const Header = () => {
       {mobileOpen && (
         <nav className="border-t border-border bg-card px-6 py-4 md:hidden">
           <div className="flex flex-col gap-4">
-            {links.map((link) => (
+            <Link
+              to="/"
+              onClick={() => setMobileOpen(false)}
+              className={`text-sm font-medium ${location.pathname === "/" ? "text-accent" : "text-muted-foreground"}`}
+            >
+              {t("nav.home") as string}
+            </Link>
+            <div>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {t("nav.findPros") as string}
+              </p>
+              <div className="ml-2 flex flex-col gap-2">
+                {findProsItems.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={`text-sm ${
+                      location.pathname === item.to || location.pathname.startsWith(item.to + "/")
+                        ? "font-medium text-accent"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            {links.slice(1).map((link) => (
               <Link
                 key={link.to}
                 to={link.to}

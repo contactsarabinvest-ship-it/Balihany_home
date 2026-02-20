@@ -14,6 +14,7 @@ import MenageProfile from "./pages/MenageProfile";
 import DesignersDirectory from "./pages/DesignersDirectory";
 import DesignerProfile from "./pages/DesignerProfile";
 import ProfitCalculator from "./pages/ProfitCalculator";
+import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Login from "./pages/Login";
@@ -43,6 +44,7 @@ const App = () => (
                 <Route path="/designers" element={<DesignersDirectory />} />
                 <Route path="/designers/:id" element={<DesignerProfile />} />
                 <Route path="/calculator" element={<ProfitCalculator />} />
+                <Route path="/blog" element={<Blog />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Login />} />

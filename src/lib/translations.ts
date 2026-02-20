@@ -3,10 +3,12 @@ export type Language = "fr" | "en" | "ar";
 export const translations = {
   // Nav
   "nav.home": { fr: "Accueil", en: "Home", ar: "الرئيسية" },
+  "nav.findPros": { fr: "Trouver des pros", en: "Find Pros", ar: "البحث عن محترفين" },
   "nav.concierge": { fr: "Conciergeries", en: "Concierge", ar: "كونسيرج" },
   "nav.menage": { fr: "Ménage", en: "Cleaning", ar: "تنظيف" },
   "nav.designers": { fr: "Designers", en: "Designers", ar: "مصممون" },
   "nav.calculator": { fr: "Calculateur", en: "Calculator", ar: "حاسبة" },
+  "nav.blog": { fr: "Blog", en: "Blog", ar: "المدونة" },
   "nav.contact": { fr: "Contact", en: "Contact", ar: "اتصل بنا" },
   "nav.signup": { fr: "Inscription", en: "Sign Up", ar: "تسجيل" },
   "nav.login": { fr: "Connexion", en: "Login", ar: "تسجيل الدخول" },
@@ -171,6 +173,10 @@ export const translations = {
   "calc.send": { fr: "Recevoir le rapport", en: "Get Report", ar: "احصل على التقرير" },
   "calc.sent": { fr: "Rapport envoyé ! Vérifiez votre boîte email.", en: "Report sent! Check your inbox.", ar: "تم إرسال التقرير! تحقق من بريدك." },
   "calc.disclaimer": { fr: "* Ces chiffres sont des estimations et ne constituent pas un conseil financier.", en: "* These figures are estimates and do not constitute financial advice.", ar: "* هذه الأرقام تقديرية ولا تشكل نصيحة مالية." },
+
+  // Blog
+  "blog.title": { fr: "Blog BaliHany", en: "BaliHany Blog", ar: "مدونة BaliHany" },
+  "blog.subtitle": { fr: "Conseils, actualités et inspirations pour réussir votre location courte durée au Maroc.", en: "Tips, news and inspiration for your short-term rental success in Morocco.", ar: "نصائح وأخبار وإلهام لنجاح إيجارك القصير في المغرب." },
   "calc.helper.price": { fr: "ex: 900 000 MAD", en: "e.g., 900,000 MAD", ar: "مثال: 900,000 درهم" },
   "calc.helper.nightly": { fr: "ex: 500 MAD", en: "e.g., 500 MAD", ar: "مثال: 500 درهم" },
   "calc.helper.occupancy": { fr: "ex: 65%", en: "e.g., 65%", ar: "مثال: 65%" },
