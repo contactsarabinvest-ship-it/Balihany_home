@@ -24,6 +24,22 @@ export const CONCIERGE_SERVICES = [
   { id: "coordination", fr: "Coordination prestataires", en: "Vendor coordination", ar: "تنسيق الموردين" },
 ];
 
+// Menage (cleaning) services - checkbox options
+export const MENAGE_SERVICES = [
+  { id: "menage_depart", fr: "Ménage de départ", en: "Checkout cleaning", ar: "تنظيف المغادرة" },
+  { id: "menage_regulier", fr: "Ménage régulier", en: "Regular cleaning", ar: "تنظيف منتظم" },
+  { id: "nettoyage_profond", fr: "Nettoyage profond", en: "Deep cleaning", ar: "تنظيف عميق" },
+  { id: "linge", fr: "Gestion du linge", en: "Laundry management", ar: "إدارة الغسيل" },
+  { id: "desinfection", fr: "Désinfection", en: "Disinfection", ar: "تعقيم" },
+  { id: "repassage", fr: "Repassage", en: "Ironing", ar: "كي الملابس" },
+  { id: "accueil_voyageurs", fr: "Accueil des voyageurs", en: "Guest welcome", ar: "استقبال المسافرين" },
+  { id: "preparation_lit", fr: "Préparation des lits", en: "Bed preparation", ar: "تجهيز الأسرّة" },
+  { id: "produits_accueil", fr: "Produits d'accueil", en: "Welcome amenities", ar: "مستلزمات الترحيب" },
+  { id: "nettoyage_vitres", fr: "Nettoyage des vitres", en: "Window cleaning", ar: "تنظيف النوافذ" },
+  { id: "entretien_exterieur", fr: "Entretien extérieur / terrasse", en: "Outdoor / terrace maintenance", ar: "صيانة خارجية / شرفة" },
+  { id: "gestion_poubelles", fr: "Gestion des poubelles", en: "Waste management", ar: "إدارة النفايات" },
+];
+
 // Designer styles - checkbox options
 export const DESIGNER_STYLES = [
   { id: "moderne", fr: "Moderne", en: "Modern", ar: "حديث" },

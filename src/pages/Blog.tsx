@@ -1,4 +1,5 @@
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PageMeta } from "@/components/PageMeta";
 import { motion } from "framer-motion";
 import { FileText } from "lucide-react";
 
@@ -7,6 +8,7 @@ const Blog = () => {
 
   return (
     <main className="py-16 md:py-24">
+      <PageMeta title={t("blog.title") as string} description={t("blog.subtitle") as string} />
       <div className="container max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

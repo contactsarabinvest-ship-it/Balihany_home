@@ -75,6 +75,7 @@ export type Database = {
           services_fr: string[]
           status: string
           user_id: string | null
+          whatsapp: string | null
         }
         Insert: {
           cities_covered_ar?: string[]
@@ -100,6 +101,7 @@ export type Database = {
           services_fr?: string[]
           status?: string
           user_id?: string | null
+          whatsapp?: string | null
         }
         Update: {
           cities_covered_ar?: string[]
@@ -125,6 +127,7 @@ export type Database = {
           services_fr?: string[]
           status?: string
           user_id?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -153,6 +156,7 @@ export type Database = {
           services_fr: string[]
           status: string
           user_id: string | null
+          whatsapp: string | null
         }
         Insert: {
           cities_covered_ar?: string[]
@@ -178,6 +182,7 @@ export type Database = {
           services_fr?: string[]
           status?: string
           user_id?: string | null
+          whatsapp?: string | null
         }
         Update: {
           cities_covered_ar?: string[]
@@ -203,6 +208,7 @@ export type Database = {
           services_fr?: string[]
           status?: string
           user_id?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -298,6 +304,7 @@ export type Database = {
           styles_en: string[]
           styles_fr: string[]
           user_id: string | null
+          whatsapp: string | null
         }
         Insert: {
           budget_level?: string
@@ -321,6 +328,7 @@ export type Database = {
           styles_en?: string[]
           styles_fr?: string[]
           user_id?: string | null
+          whatsapp?: string | null
         }
         Update: {
           budget_level?: string
@@ -344,6 +352,7 @@ export type Database = {
           styles_en?: string[]
           styles_fr?: string[]
           user_id?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }

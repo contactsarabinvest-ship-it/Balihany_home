@@ -1,3 +1,4 @@
+import { PageMeta } from "@/components/PageMeta";
 import HeroSection from "@/components/HeroSection";
 import HowItWorks from "@/components/HowItWorks";
 import BenefitsSection from "@/components/BenefitsSection";
@@ -8,6 +9,7 @@ import CTASection from "@/components/CTASection";
 const Index = () => {
   return (
     <main>
+      <PageMeta title="" description="Balihany est la plateforme centrale qui connecte les hôtes Airbnb au Maroc avec des conciergeries, designers d'intérieur, services de ménage et outils de rentabilité." />
       <HeroSection />
       <HowItWorks />
       <BenefitsSection />

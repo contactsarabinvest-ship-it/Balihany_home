@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, MapPin, Award, ArrowLeft, ExternalLink } from "lucide-react";
+import { Building2, MapPin, Award, ArrowLeft, ExternalLink, MessageCircle } from "lucide-react";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { z } from "zod";
 
@@ -207,7 +207,18 @@ const ConciergeProfile = () => {
             ) : null}
           </div>
 
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 space-y-4">
+            {company.whatsapp && (
+              <a
+                href={`https://wa.me/${company.whatsapp.replace(/[\s\-()]/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-white font-semibold hover:bg-[#1fb855] transition-colors"
+              >
+                <MessageCircle className="h-5 w-5" />
+                {t("profile.whatsapp") as string}
+              </a>
+            )}
             <Card className="rounded-2xl">
               <CardHeader>
                 <CardTitle className="text-lg">{t("concierge.cta.contact") as string}</CardTitle>

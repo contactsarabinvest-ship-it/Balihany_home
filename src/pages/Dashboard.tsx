@@ -12,12 +12,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogoUpload, PortfolioUpload } from "@/components/ImageUpload";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, Clock, CheckCircle, Pencil, ExternalLink, Paintbrush } from "lucide-react";
+import { Building2, Clock, CheckCircle, Pencil, ExternalLink, Paintbrush, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
 
 type ConciergeCompany = Database["public"]["Tables"]["concierge_companies"]["Row"];
 type Designer = Database["public"]["Tables"]["designers"]["Row"];
+type MenageCompany = Database["public"]["Tables"]["menage_companies"]["Row"];
 
 type ConciergeEditForm = {
   name: string;
@@ -29,6 +30,7 @@ type ConciergeEditForm = {
   portfolioUrls: string;
   portfolioPhotos: string;
   portfolioPhotoUrls: string[];
+  whatsapp: string;
 };
 
 type DesignerEditForm = {
@@ -41,6 +43,20 @@ type DesignerEditForm = {
   portfolioUrls: string;
   portfolioPhotos: string;
   portfolioPhotoUrls: string[];
+  whatsapp: string;
+};
+
+type MenageEditForm = {
+  name: string;
+  city: string;
+  description: string;
+  services: string;
+  citiesCovered: string;
+  logoUrl: string | null;
+  portfolioUrls: string;
+  portfolioPhotos: string;
+  portfolioPhotoUrls: string[];
+  whatsapp: string;
 };
 
 const Dashboard = () => {
@@ -49,10 +65,11 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
-  const [editingType, setEditingType] = useState<"concierge" | "designer" | null>(null);
+  const [editingType, setEditingType] = useState<"concierge" | "designer" | "menage" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [conciergeForm, setConciergeForm] = useState<ConciergeEditForm | null>(null);
   const [designerForm, setDesignerForm] = useState<DesignerEditForm | null>(null);
+  const [menageForm, setMenageForm] = useState<MenageEditForm | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -88,6 +105,19 @@ const Dashboard = () => {
     enabled: !!userId,
   });
 
+  const { data: menageCompanies } = useQuery({
+    queryKey: ["my-menage", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("menage_companies")
+        .select("*")
+        .eq("user_id", userId!);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+
   const getLocalField = (fr: string, en: string, ar: string) => {
     if (lang === "ar") return ar || fr;
     if (lang === "en") return en || fr;
@@ -108,8 +138,10 @@ const Dashboard = () => {
       portfolioUrls: (c.portfolio_urls ?? []).join(", "),
       portfolioPhotos: "",
       portfolioPhotoUrls: pending,
+      whatsapp: c.whatsapp ?? "",
     });
     setDesignerForm(null);
+    setMenageForm(null);
   };
 
   const startEditDesigner = (d: Designer) => {
@@ -126,8 +158,30 @@ const Dashboard = () => {
       portfolioUrls: (d.portfolio_urls ?? []).join(", "),
       portfolioPhotos: "",
       portfolioPhotoUrls: pending,
+      whatsapp: d.whatsapp ?? "",
     });
     setConciergeForm(null);
+    setMenageForm(null);
+  };
+
+  const startEditMenage = (m: MenageCompany) => {
+    setEditingType("menage");
+    setEditingId(m.id);
+    const pending = m.portfolio_photos_pending ?? [];
+    setMenageForm({
+      name: m.name,
+      city: getLocalField(m.city_fr, m.city_en, m.city_ar),
+      description: getLocalField(m.description_fr, m.description_en, m.description_ar),
+      services: (m.services_fr ?? m.services_en ?? m.services_ar ?? []).join(", "),
+      citiesCovered: (m.cities_covered_fr ?? m.cities_covered_en ?? m.cities_covered_ar ?? []).join(", "),
+      logoUrl: m.logo_url,
+      portfolioUrls: (m.portfolio_urls ?? []).join(", "),
+      portfolioPhotos: "",
+      portfolioPhotoUrls: pending,
+      whatsapp: m.whatsapp ?? "",
+    });
+    setConciergeForm(null);
+    setDesignerForm(null);
   };
 
   const cancelEdit = () => {
@@ -135,6 +189,7 @@ const Dashboard = () => {
     setEditingId(null);
     setConciergeForm(null);
     setDesignerForm(null);
+    setMenageForm(null);
   };
 
   const handleSaveConcierge = async (e: React.FormEvent) => {
@@ -167,6 +222,7 @@ const Dashboard = () => {
         cities_covered_ar: citiesArr,
         portfolio_urls: portfolioUrlsArr,
         portfolio_photos_pending: portfolioPhotosPending,
+        whatsapp: conciergeForm.whatsapp.trim() || null,
       })
       .eq("id", editingId);
 
@@ -208,6 +264,7 @@ const Dashboard = () => {
         budget_level: designerForm.budgetLevel,
         portfolio_urls: portfolioUrlsArr,
         portfolio_photos_pending: portfolioPhotosPending,
+        whatsapp: designerForm.whatsapp.trim() || null,
       })
       .eq("id", editingId);
 
@@ -222,10 +279,134 @@ const Dashboard = () => {
     cancelEdit();
   };
 
+  const handleSaveMenage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!menageForm || !editingId) return;
+
+    const servicesArr = menageForm.services.split(",").map((s) => s.trim()).filter(Boolean);
+    const citiesArr = menageForm.citiesCovered.split(",").map((s) => s.trim()).filter(Boolean);
+    const portfolioUrlsArr = menageForm.portfolioUrls.split(",").map((s) => s.trim()).filter(Boolean);
+    const pastedPhotos = menageForm.portfolioPhotos.split(",").map((s) => s.trim()).filter(Boolean);
+    const portfolioPhotosPending = [...menageForm.portfolioPhotoUrls, ...pastedPhotos];
+
+    setSaving(true);
+    const { error } = await supabase
+      .from("menage_companies")
+      .update({
+        name: menageForm.name,
+        logo_url: menageForm.logoUrl,
+        city_fr: menageForm.city,
+        city_en: menageForm.city,
+        city_ar: menageForm.city,
+        description_fr: menageForm.description,
+        description_en: menageForm.description,
+        description_ar: menageForm.description,
+        services_fr: servicesArr,
+        services_en: servicesArr,
+        services_ar: servicesArr,
+        cities_covered_fr: citiesArr,
+        cities_covered_en: citiesArr,
+        cities_covered_ar: citiesArr,
+        portfolio_urls: portfolioUrlsArr,
+        portfolio_photos_pending: portfolioPhotosPending,
+        whatsapp: menageForm.whatsapp.trim() || null,
+      })
+      .eq("id", editingId);
+
+    setSaving(false);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: t("form.success") as string });
+    queryClient.invalidateQueries({ queryKey: ["my-menage", userId] });
+    queryClient.invalidateQueries({ queryKey: ["menage", editingId] });
+    cancelEdit();
+  };
+
   const budgetLabel = (level: string) => {
     const key = `designers.budget.${level}` as "designers.budget.accessible" | "designers.budget.mid-range" | "designers.budget.premium";
     return t(key) as string;
   };
+
+  const renderEditFormFields = (
+    form: { name: string; city: string; description: string; logoUrl: string | null; portfolioUrls: string; portfolioPhotos: string; portfolioPhotoUrls: string[]; whatsapp: string },
+    setForm: (fn: (prev: any) => any) => void,
+    approvedPhotos: string[],
+  ) => (
+    <>
+      <div>
+        <Label className="mb-1.5 block text-sm">{t("form.companyName") as string}</Label>
+        <Input value={form.name} onChange={(e) => setForm((f: any) => (f ? { ...f, name: e.target.value } : f))} required className="rounded-lg" />
+      </div>
+      <div>
+        <Label className="mb-1.5 block text-sm">WhatsApp</Label>
+        <Input
+          type="tel"
+          placeholder="+212 6XX XX XX XX"
+          value={form.whatsapp}
+          onChange={(e) => setForm((f: any) => (f ? { ...f, whatsapp: e.target.value } : f))}
+          className="rounded-lg"
+        />
+        <p className="text-xs text-muted-foreground mt-1">{t("form.whatsappHint") as string}</p>
+      </div>
+      <div>
+        <Label className="mb-1.5 block text-sm">{t("form.city") as string}</Label>
+        <Input value={form.city} onChange={(e) => setForm((f: any) => (f ? { ...f, city: e.target.value } : f))} required className="rounded-lg" />
+      </div>
+      <div>
+        <Label className="mb-1.5 block text-sm">{t("form.description") as string}</Label>
+        <Textarea value={form.description} onChange={(e) => setForm((f: any) => (f ? { ...f, description: e.target.value } : f))} required rows={4} className="rounded-lg" />
+      </div>
+      <LogoUpload
+        value={form.logoUrl ?? undefined}
+        onChange={(url) => setForm((f: any) => (f ? { ...f, logoUrl: url } : f))}
+        label={t("form.logo") as string}
+        hint={t("form.logoHint") as string}
+      />
+      <PortfolioUpload
+        value={form.portfolioPhotoUrls}
+        onChange={(urls) => setForm((f: any) => (f ? { ...f, portfolioPhotoUrls: urls } : f))}
+        label={t("form.uploadPhotos") as string}
+        hint={t("form.uploadPhotosHint") as string}
+      />
+      <p className="text-xs text-muted-foreground">{t("dashboard.pendingPhotosHint") as string}</p>
+      {approvedPhotos.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {t("dashboard.approvedPhotos") as string}: {approvedPhotos.length}
+        </p>
+      )}
+      <div>
+        <Label className="mb-1.5 block text-sm">{t("concierge.portfolio.urls") as string}</Label>
+        <Input
+          placeholder={t("concierge.portfolio.urlsHint") as string}
+          value={form.portfolioUrls}
+          onChange={(e) => setForm((f: any) => (f ? { ...f, portfolioUrls: e.target.value } : f))}
+          className="rounded-lg"
+        />
+      </div>
+      <div>
+        <Label className="mb-1.5 block text-sm">{t("concierge.portfolio.photos") as string}</Label>
+        <Input
+          placeholder={t("concierge.portfolio.photosHint") as string}
+          value={form.portfolioPhotos}
+          onChange={(e) => setForm((f: any) => (f ? { ...f, portfolioPhotos: e.target.value } : f))}
+          className="rounded-lg"
+        />
+      </div>
+    </>
+  );
+
+  const renderSaveButtons = () => (
+    <div className="flex gap-2">
+      <Button type="submit" disabled={saving} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full">
+        {saving ? "..." : t("dashboard.save") as string}
+      </Button>
+      <Button type="button" variant="outline" onClick={cancelEdit} className="rounded-full">
+        {t("dashboard.cancel") as string}
+      </Button>
+    </div>
+  );
 
   return (
     <main className="py-16 md:py-24">
@@ -234,7 +415,7 @@ const Dashboard = () => {
           {t("nav.dashboard") as string}
         </h1>
 
-        {(companies?.length === 0 && designers?.length === 0) && (
+        {(companies?.length === 0 && designers?.length === 0 && menageCompanies?.length === 0) && (
           <p className="text-muted-foreground">{t("auth.pendingMessage") as string}</p>
         )}
 
@@ -281,18 +462,7 @@ const Dashboard = () => {
               <CardContent>
                 {editingType === "concierge" && editingId === c.id && conciergeForm ? (
                   <form onSubmit={handleSaveConcierge} className="space-y-4">
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("form.companyName") as string}</Label>
-                      <Input value={conciergeForm.name} onChange={(e) => setConciergeForm((f) => (f ? { ...f, name: e.target.value } : f))} required className="rounded-lg" />
-                    </div>
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("form.city") as string}</Label>
-                      <Input value={conciergeForm.city} onChange={(e) => setConciergeForm((f) => (f ? { ...f, city: e.target.value } : f))} required className="rounded-lg" />
-                    </div>
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("form.description") as string}</Label>
-                      <Textarea value={conciergeForm.description} onChange={(e) => setConciergeForm((f) => (f ? { ...f, description: e.target.value } : f))} required rows={4} className="rounded-lg" />
-                    </div>
+                    {renderEditFormFields(conciergeForm, setConciergeForm, c.portfolio_photos ?? [])}
                     <div>
                       <Label className="mb-1.5 block text-sm">{t("form.servicesList") as string}</Label>
                       <Input value={conciergeForm.services} onChange={(e) => setConciergeForm((f) => (f ? { ...f, services: e.target.value } : f))} required className="rounded-lg" />
@@ -301,50 +471,7 @@ const Dashboard = () => {
                       <Label className="mb-1.5 block text-sm">{t("form.citiesCovered") as string}</Label>
                       <Input value={conciergeForm.citiesCovered} onChange={(e) => setConciergeForm((f) => (f ? { ...f, citiesCovered: e.target.value } : f))} required className="rounded-lg" />
                     </div>
-                    <LogoUpload
-                      value={conciergeForm.logoUrl ?? undefined}
-                      onChange={(url) => setConciergeForm((f) => (f ? { ...f, logoUrl: url } : f))}
-                      label={t("form.logo") as string}
-                      hint={t("form.logoHint") as string}
-                    />
-                    <PortfolioUpload
-                      value={conciergeForm.portfolioPhotoUrls}
-                      onChange={(urls) => setConciergeForm((f) => (f ? { ...f, portfolioPhotoUrls: urls } : f))}
-                      label={t("form.uploadPhotos") as string}
-                      hint={t("form.uploadPhotosHint") as string}
-                    />
-                    <p className="text-xs text-muted-foreground">{t("dashboard.pendingPhotosHint") as string}</p>
-                    {(c.portfolio_photos?.length ?? 0) > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {t("dashboard.approvedPhotos") as string}: {c.portfolio_photos!.length}
-                      </p>
-                    )}
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("concierge.portfolio.urls") as string}</Label>
-                      <Input
-                        placeholder={t("concierge.portfolio.urlsHint") as string}
-                        value={conciergeForm.portfolioUrls}
-                        onChange={(e) => setConciergeForm((f) => (f ? { ...f, portfolioUrls: e.target.value } : f))}
-                        className="rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("concierge.portfolio.photos") as string}</Label>
-                      <Input
-                        placeholder={t("concierge.portfolio.photosHint") as string}
-                        value={conciergeForm.portfolioPhotos}
-                        onChange={(e) => setConciergeForm((f) => (f ? { ...f, portfolioPhotos: e.target.value } : f))}
-                        className="rounded-lg"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button type="submit" disabled={saving} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full">
-                        {saving ? "..." : t("dashboard.save") as string}
-                      </Button>
-                      <Button type="button" variant="outline" onClick={cancelEdit} className="rounded-full">
-                        {t("dashboard.cancel") as string}
-                      </Button>
-                    </div>
+                    {renderSaveButtons()}
                   </form>
                 ) : (
                   <p className="text-sm text-muted-foreground">
@@ -354,6 +481,72 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           ))}
+            </div>
+          </div>
+        )}
+
+        {menageCompanies && menageCompanies.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-4 text-lg font-semibold text-foreground">{t("signup.type.menage") as string}</h2>
+            <div className="space-y-4">
+              {menageCompanies.map((m) => (
+                <Card key={m.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-accent/10">
+                          {m.logo_url ? (
+                            <img src={m.logo_url} alt={m.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <Sparkles className="h-5 w-5 text-accent" />
+                          )}
+                        </div>
+                        <CardTitle className="font-display text-lg">{m.name}</CardTitle>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={m.status === "approved" ? "default" : "secondary"} className="gap-1">
+                          {m.status === "approved" ? <CheckCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                          {m.status === "approved" ? "Approved" : t("concierge.pending") as string}
+                        </Badge>
+                        {(editingType !== "menage" || editingId !== m.id) && (
+                          <>
+                            <Button variant="outline" size="sm" className="gap-1.5 rounded-full" onClick={() => startEditMenage(m)}>
+                              <Pencil className="h-3.5 w-3.5" />
+                              {t("dashboard.editProfile") as string}
+                            </Button>
+                            <Button variant="ghost" size="sm" asChild className="gap-1.5 rounded-full">
+                              <Link to={`/menage/${m.id}`}>
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                {t("dashboard.viewProfile") as string}
+                              </Link>
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {editingType === "menage" && editingId === m.id && menageForm ? (
+                      <form onSubmit={handleSaveMenage} className="space-y-4">
+                        {renderEditFormFields(menageForm, setMenageForm, m.portfolio_photos ?? [])}
+                        <div>
+                          <Label className="mb-1.5 block text-sm">{t("form.servicesList") as string}</Label>
+                          <Input value={menageForm.services} onChange={(e) => setMenageForm((f) => (f ? { ...f, services: e.target.value } : f))} required className="rounded-lg" />
+                        </div>
+                        <div>
+                          <Label className="mb-1.5 block text-sm">{t("form.citiesCovered") as string}</Label>
+                          <Input value={menageForm.citiesCovered} onChange={(e) => setMenageForm((f) => (f ? { ...f, citiesCovered: e.target.value } : f))} required className="rounded-lg" />
+                        </div>
+                        {renderSaveButtons()}
+                      </form>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {getLocalField(m.description_fr, m.description_en, m.description_ar)}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         )}
@@ -401,18 +594,7 @@ const Dashboard = () => {
               <CardContent>
                 {editingType === "designer" && editingId === d.id && designerForm ? (
                   <form onSubmit={handleSaveDesigner} className="space-y-4">
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("form.companyName") as string}</Label>
-                      <Input value={designerForm.name} onChange={(e) => setDesignerForm((f) => (f ? { ...f, name: e.target.value } : f))} required className="rounded-lg" />
-                    </div>
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("form.city") as string}</Label>
-                      <Input value={designerForm.city} onChange={(e) => setDesignerForm((f) => (f ? { ...f, city: e.target.value } : f))} required className="rounded-lg" />
-                    </div>
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("form.description") as string}</Label>
-                      <Textarea value={designerForm.description} onChange={(e) => setDesignerForm((f) => (f ? { ...f, description: e.target.value } : f))} required rows={4} className="rounded-lg" />
-                    </div>
+                    {renderEditFormFields(designerForm, setDesignerForm, d.portfolio_photos ?? [])}
                     <div>
                       <Label className="mb-1.5 block text-sm">{t("form.styles") as string}</Label>
                       <Input value={designerForm.styles} onChange={(e) => setDesignerForm((f) => (f ? { ...f, styles: e.target.value } : f))} required placeholder="Modern, Minimalist, ..." className="rounded-lg" />
@@ -430,50 +612,7 @@ const Dashboard = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <LogoUpload
-                      value={designerForm.logoUrl ?? undefined}
-                      onChange={(url) => setDesignerForm((f) => (f ? { ...f, logoUrl: url } : f))}
-                      label={t("form.logo") as string}
-                      hint={t("form.logoHint") as string}
-                    />
-                    <PortfolioUpload
-                      value={designerForm.portfolioPhotoUrls}
-                      onChange={(urls) => setDesignerForm((f) => (f ? { ...f, portfolioPhotoUrls: urls } : f))}
-                      label={t("form.uploadPhotos") as string}
-                      hint={t("form.uploadPhotosHint") as string}
-                    />
-                    <p className="text-xs text-muted-foreground">{t("dashboard.pendingPhotosHint") as string}</p>
-                    {(d.portfolio_photos?.length ?? 0) > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {t("dashboard.approvedPhotos") as string}: {d.portfolio_photos!.length}
-                      </p>
-                    )}
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("concierge.portfolio.urls") as string}</Label>
-                      <Input
-                        placeholder={t("concierge.portfolio.urlsHint") as string}
-                        value={designerForm.portfolioUrls}
-                        onChange={(e) => setDesignerForm((f) => (f ? { ...f, portfolioUrls: e.target.value } : f))}
-                        className="rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("concierge.portfolio.photos") as string}</Label>
-                      <Input
-                        placeholder={t("concierge.portfolio.photosHint") as string}
-                        value={designerForm.portfolioPhotos}
-                        onChange={(e) => setDesignerForm((f) => (f ? { ...f, portfolioPhotos: e.target.value } : f))}
-                        className="rounded-lg"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button type="submit" disabled={saving} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full">
-                        {saving ? "..." : t("dashboard.save") as string}
-                      </Button>
-                      <Button type="button" variant="outline" onClick={cancelEdit} className="rounded-full">
-                        {t("dashboard.cancel") as string}
-                      </Button>
-                    </div>
+                    {renderSaveButtons()}
                   </form>
                 ) : (
                   <p className="text-sm text-muted-foreground">

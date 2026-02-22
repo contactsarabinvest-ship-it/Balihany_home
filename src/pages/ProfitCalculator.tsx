@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Calculator, TrendingUp, DollarSign, Percent } from "lucide-react";
+import { Calculator, TrendingUp, DollarSign, Percent, Download } from "lucide-react";
 import { z } from "zod";
 
 const emailSchema = z.string().trim().email().max(255);
@@ -16,8 +17,8 @@ const ProfitCalculator = () => {
   const { toast } = useToast();
   const [inputs, setInputs] = useState({ purchasePrice: "", nightlyRate: "", occupancy: "", expenses: "" });
   const [results, setResults] = useState<{ monthlyRevenue: number; monthlyProfit: number; yearlyROI: number } | null>(null);
-  const [email, setEmail] = useState("");
-  const [emailSent, setEmailSent] = useState(false);
+  const [downloadEmail, setDownloadEmail] = useState("");
+  const [downloadUnlocked, setDownloadUnlocked] = useState(false);
 
   const update = (field: string, value: string) => setInputs(prev => ({ ...prev, [field]: value }));
 
@@ -35,31 +36,13 @@ const ProfitCalculator = () => {
     const yearlyROI = ((monthlyProfit * 12) / price) * 100;
 
     setResults({ monthlyRevenue, monthlyProfit, yearlyROI });
-    setEmailSent(false);
-  };
-
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailSchema.safeParse(email).success || !results) return;
-
-    await supabase.from("calculator_leads").insert({
-      email,
-      purchase_price: parseFloat(inputs.purchasePrice),
-      nightly_rate: parseFloat(inputs.nightlyRate),
-      occupancy_rate: parseFloat(inputs.occupancy),
-      monthly_expenses: parseFloat(inputs.expenses),
-      estimated_monthly_profit: results.monthlyProfit,
-      estimated_yearly_roi: results.yearlyROI,
-    });
-
-    setEmailSent(true);
-    toast({ title: t("calc.sent") as string });
   };
 
   const formatMAD = (n: number) => `${n.toLocaleString("fr-MA", { maximumFractionDigits: 0 })} MAD`;
 
   return (
     <main className="py-16 md:py-24">
+      <PageMeta title={t("calc.title") as string} description={t("calc.subtitle") as string} />
       <div className="container max-w-3xl">
         <div className="text-center mb-12">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
@@ -165,30 +148,49 @@ const ProfitCalculator = () => {
 
             <p className="text-xs text-muted-foreground text-center">{t("calc.disclaimer") as string}</p>
 
-            {!emailSent && (
-              <Card className="rounded-2xl">
-                <CardHeader>
-                  <CardTitle className="text-lg">{t("calc.emailCTA") as string}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleEmailSubmit} className="flex gap-3">
-                    <Input
-                      type="email"
-                      placeholder={t("calc.emailPlaceholder") as string}
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      required
-                      className="flex-1 rounded-full"
-                    />
-                    <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full px-6">
-                      {t("calc.send") as string}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
           </motion.div>
         )}
+
+        <Card className="mt-8 rounded-2xl border-dashed border-accent/30 bg-accent/5">
+          <CardContent className="p-6">
+            <div className="mb-3">
+              <p className="font-medium">{t("calc.downloadExcel") as string}</p>
+              <p className="text-sm text-muted-foreground">{t("calc.downloadExcelHint") as string}</p>
+            </div>
+            {downloadUnlocked ? (
+              <Button asChild variant="outline" className="gap-2 rounded-full">
+                <a href="/Balihany-Simulateur.xlsx" download>
+                  <Download className="h-4 w-4" />
+                  {t("calc.downloadExcel") as string}
+                </a>
+              </Button>
+            ) : (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!emailSchema.safeParse(downloadEmail).success) return;
+                  await supabase.from("calculator_leads").insert({ email: downloadEmail });
+                  setDownloadUnlocked(true);
+                  toast({ title: t("calc.downloadReady") as string });
+                }}
+                className="flex gap-3"
+              >
+                <Input
+                  type="email"
+                  placeholder={t("calc.emailPlaceholder") as string}
+                  value={downloadEmail}
+                  onChange={(e) => setDownloadEmail(e.target.value)}
+                  required
+                  className="flex-1 rounded-full"
+                />
+                <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2 rounded-full px-6 shrink-0">
+                  <Download className="h-4 w-4" />
+                  {t("calc.downloadBtn") as string}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </main>
   );

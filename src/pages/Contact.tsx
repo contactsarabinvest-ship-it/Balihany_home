@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +45,7 @@ const Contact = () => {
 
   return (
     <main className="py-16 md:py-24">
+      <PageMeta title={t("contact.title") as string} description={t("contact.subtitle") as string} />
       <div className="container max-w-3xl">
         <div className="text-center mb-12">
           <h1 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">

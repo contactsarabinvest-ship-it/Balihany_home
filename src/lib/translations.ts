@@ -173,6 +173,11 @@ export const translations = {
   "calc.send": { fr: "Recevoir le rapport", en: "Get Report", ar: "احصل على التقرير" },
   "calc.sent": { fr: "Rapport envoyé ! Vérifiez votre boîte email.", en: "Report sent! Check your inbox.", ar: "تم إرسال التقرير! تحقق من بريدك." },
   "calc.disclaimer": { fr: "* Ces chiffres sont des estimations et ne constituent pas un conseil financier.", en: "* These figures are estimates and do not constitute financial advice.", ar: "* هذه الأرقام تقديرية ولا تشكل نصيحة مالية." },
+  "calc.downloadExcel": { fr: "Télécharger le simulateur Excel complet", en: "Download the full Excel simulator", ar: "تحميل محاكي Excel الكامل" },
+  "calc.downloadExcelHint": { fr: "Entrez votre email pour recevoir l'accès au simulateur Excel complet.", en: "Enter your email to unlock the full Excel simulator.", ar: "أدخل بريدك الإلكتروني للحصول على محاكي Excel الكامل." },
+  "calc.unlockDownload": { fr: "Débloquer", en: "Unlock", ar: "فتح" },
+  "calc.downloadBtn": { fr: "Télécharger", en: "Download", ar: "تحميل" },
+  "calc.downloadReady": { fr: "Merci ! Cliquez pour télécharger le simulateur.", en: "Thanks! Click to download the simulator.", ar: "شكراً! انقر لتحميل المحاكي." },
 
   // Blog
   "blog.title": { fr: "Blog BaliHany", en: "BaliHany Blog", ar: "مدونة BaliHany" },
@@ -208,7 +213,9 @@ export const translations = {
   "form.searchCity": { fr: "Rechercher une ville...", en: "Search for a city...", ar: "البحث عن مدينة..." },
   "form.add": { fr: "Ajouter", en: "Add", ar: "إضافة" },
   "form.cityCustomHint": { fr: "Ville personnalisée — validez en cliquant ailleurs", en: "Custom city — validate by clicking away", ar: "مدينة مخصصة" },
-  "form.whatsapp": { fr: "WhatsApp", en: "WhatsApp", ar: "واتساب" },
+  "form.whatsapp": { fr: "WhatsApp (ex: +212 6XX XX XX XX)", en: "WhatsApp (e.g. +212 6XX XX XX XX)", ar: "واتساب (مثال: +212 6XX XX XX XX)" },
+  "form.whatsappHint": { fr: "Numéro affiché sur votre profil pour que les clients vous contactent directement", en: "Displayed on your profile so clients can contact you directly", ar: "يظهر في ملفك الشخصي حتى يتمكن العملاء من الاتصال بك مباشرة" },
+  "profile.whatsapp": { fr: "Contacter sur WhatsApp", en: "Contact on WhatsApp", ar: "تواصل عبر واتساب" },
   "form.experience": { fr: "Années d'expérience", en: "Years of experience", ar: "سنوات الخبرة" },
   "form.styles": { fr: "Styles (séparés par virgule)", en: "Styles (comma separated)", ar: "الأنماط (مفصولة بفاصلة)" },
   "dashboard.editProfile": { fr: "Modifier le profil", en: "Edit profile", ar: "تعديل الملف" },
@@ -257,12 +264,12 @@ export const translations = {
   "footer.rights": { fr: "Tous droits réservés.", en: "All rights reserved.", ar: "جميع الحقوق محفوظة." },
 
   // Auth
-  "auth.signup.title": { fr: "Inscription Conciergerie", en: "Concierge Signup", ar: "تسجيل كونسيرج" },
+  "auth.signup.title": { fr: "Inscription Professionnel", en: "Professional Signup", ar: "تسجيل محترف" },
   "auth.signup.desc": { fr: "Créez votre compte et enregistrez votre société.", en: "Create your account and register your company.", ar: "أنشئ حسابك وسجل شركتك." },
   "auth.signup.intro": {
-    fr: "Vous êtes une conciergerie ou un designer d'intérieur spécialisé en location courte durée ? Inscrivez-vous pour apparaître dans notre annuaire. Votre profil sera examiné avant publication.",
-    en: "Are you a concierge service or interior designer specialized in short-term rentals? Sign up to appear in our directory. Your profile will be reviewed before publication.",
-    ar: "هل أنت خدمة كونسيرج أو مصمم داخلي متخصص في الإيجارات القصيرة؟ سجل للظهور في دليلنا. سيتم مراجعة ملفك قبل النشر.",
+    fr: "Vous êtes une conciergerie, un service de ménage ou un designer d'intérieur spécialisé en location courte durée ? Inscrivez-vous pour apparaître dans notre annuaire. Votre profil sera examiné avant publication.",
+    en: "Are you a concierge service, cleaning service or interior designer specialized in short-term rentals? Sign up to appear in our directory. Your profile will be reviewed before publication.",
+    ar: "هل أنت خدمة كونسيرج أو خدمة تنظيف أو مصمم داخلي متخصص في الإيجارات القصيرة؟ سجل للظهور في دليلنا. سيتم مراجعة ملفك قبل النشر.",
   },
   "auth.signup.review": {
     fr: "Un membre de notre équipe pourra vous contacter avant la publication. Délai estimé : 3 à 5 jours ouvrables.",
@@ -283,6 +290,7 @@ export const translations = {
   "signup.companySubmitted": { fr: "Votre profil a été soumis pour validation !", en: "Your profile has been submitted for review!", ar: "تم إرسال ملفك للمراجعة!" },
   "signup.type": { fr: "Type de professionnel", en: "Professional type", ar: "نوع المحترف" },
   "signup.type.concierge": { fr: "Conciergerie", en: "Concierge Service", ar: "خدمة كونسيرج" },
+  "signup.type.menage": { fr: "Service de ménage", en: "Cleaning Service", ar: "خدمة تنظيف" },
   "signup.type.designer": { fr: "Designer d'intérieur", en: "Interior Designer", ar: "مصمم داخلي" },
   "signup.premiumInterest": { fr: "Intéressé par le plan Partenaire Premium ?", en: "Interested in the Premium Partner plan?", ar: "مهتم بخطة الشريك المميز؟" },
   "form.validationError": { fr: "Veuillez remplir tous les champs obligatoires correctement (description min. 10 caractères).", en: "Please fill in all required fields correctly (description min. 10 characters).", ar: "يرجى ملء جميع الحقول المطلوبة بشكل صحيح." },

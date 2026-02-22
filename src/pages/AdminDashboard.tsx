@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Mail, Calculator, Star, MessageSquare } from "lucide-react";
+import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Sparkles, Mail, Calculator, Star, MessageSquare } from "lucide-react";
 
 const AdminDashboard = () => {
   const { t } = useLanguage();
@@ -41,15 +41,18 @@ const AdminDashboard = () => {
   const { data: itemsWithPendingPhotos } = useQuery({
     queryKey: ["admin-pending-photos", userId, isAdmin],
     queryFn: async () => {
-      const [companiesRes, designersRes] = await Promise.all([
+      const [companiesRes, designersRes, menageRes] = await Promise.all([
         supabase.from("concierge_companies").select("id, name, portfolio_photos, portfolio_photos_pending"),
         supabase.from("designers").select("id, name, portfolio_photos, portfolio_photos_pending"),
+        supabase.from("menage_companies").select("id, name, portfolio_photos, portfolio_photos_pending"),
       ]);
       if (companiesRes.error) throw companiesRes.error;
       if (designersRes.error) throw designersRes.error;
+      if (menageRes.error) throw menageRes.error;
       const companies = (companiesRes.data ?? []).filter((c) => (c.portfolio_photos_pending?.length ?? 0) > 0).map((c) => ({ ...c, type: "concierge" as const }));
       const designers = (designersRes.data ?? []).filter((d) => (d.portfolio_photos_pending?.length ?? 0) > 0).map((d) => ({ ...d, type: "designer" as const }));
-      return [...companies, ...designers];
+      const menage = (menageRes.data ?? []).filter((m) => (m.portfolio_photos_pending?.length ?? 0) > 0).map((m) => ({ ...m, type: "menage" as const }));
+      return [...companies, ...designers, ...menage];
     },
     enabled: !!userId && isAdmin === true,
   });
@@ -72,6 +75,19 @@ const AdminDashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("designers")
+        .select("id, name, city_fr, status")
+        .eq("status", "pending");
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId && isAdmin === true,
+  });
+
+  const { data: pendingMenage } = useQuery({
+    queryKey: ["admin-pending-menage", userId, isAdmin],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("menage_companies")
         .select("id, name, city_fr, status")
         .eq("status", "pending");
       if (error) throw error;
@@ -151,11 +167,14 @@ const AdminDashboard = () => {
 
   const getPhotoTable = (id: string) => itemsWithPendingPhotos?.find((i) => i.id === id);
 
+  const getTableName = (type: string) =>
+    type === "concierge" ? "concierge_companies" as const : type === "menage" ? "menage_companies" as const : "designers" as const;
+
   const approvePhoto = async (itemId: string, photoUrl: string) => {
     const item = getPhotoTable(itemId);
     if (!item) return;
     setProcessing(`${itemId}-${photoUrl}`);
-    const table = item.type === "concierge" ? "concierge_companies" : "designers";
+    const table = getTableName(item.type);
     const approved = [...(item.portfolio_photos ?? []), photoUrl];
     const pending = (item.portfolio_photos_pending ?? []).filter((p) => p !== photoUrl);
     const { error } = await supabase.from(table).update({ portfolio_photos: approved, portfolio_photos_pending: pending }).eq("id", itemId);
@@ -166,14 +185,14 @@ const AdminDashboard = () => {
     }
     toast({ title: "Photo approved" });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-photos"] });
-    queryClient.invalidateQueries({ queryKey: [item.type === "concierge" ? "concierge" : "designer", itemId] });
+    queryClient.invalidateQueries({ queryKey: [item.type, itemId] });
   };
 
   const rejectPhoto = async (itemId: string, photoUrl: string) => {
     const item = getPhotoTable(itemId);
     if (!item) return;
     setProcessing(`${itemId}-${photoUrl}`);
-    const table = item.type === "concierge" ? "concierge_companies" : "designers";
+    const table = getTableName(item.type);
     const pending = (item.portfolio_photos_pending ?? []).filter((p) => p !== photoUrl);
     const { error } = await supabase.from(table).update({ portfolio_photos_pending: pending }).eq("id", itemId);
     setProcessing(null);
@@ -183,14 +202,14 @@ const AdminDashboard = () => {
     }
     toast({ title: "Photo rejected" });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-photos"] });
-    queryClient.invalidateQueries({ queryKey: [item.type === "concierge" ? "concierge" : "designer", itemId] });
+    queryClient.invalidateQueries({ queryKey: [item.type, itemId] });
   };
 
   const approveAll = async (itemId: string) => {
     const item = getPhotoTable(itemId);
     if (!item || !item.portfolio_photos_pending?.length) return;
     setProcessing(itemId);
-    const table = item.type === "concierge" ? "concierge_companies" : "designers";
+    const table = getTableName(item.type);
     const approved = [...(item.portfolio_photos ?? []), ...item.portfolio_photos_pending];
     const { error } = await supabase.from(table).update({ portfolio_photos: approved, portfolio_photos_pending: [] }).eq("id", itemId);
     setProcessing(null);
@@ -200,14 +219,14 @@ const AdminDashboard = () => {
     }
     toast({ title: "All photos approved" });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-photos"] });
-    queryClient.invalidateQueries({ queryKey: [item.type === "concierge" ? "concierge" : "designer", itemId] });
+    queryClient.invalidateQueries({ queryKey: [item.type, itemId] });
   };
 
   const rejectAll = async (itemId: string) => {
     const item = getPhotoTable(itemId);
     if (!item) return;
     setProcessing(itemId);
-    const table = item.type === "concierge" ? "concierge_companies" : "designers";
+    const table = getTableName(item.type);
     const { error } = await supabase.from(table).update({ portfolio_photos_pending: [] }).eq("id", itemId);
     setProcessing(null);
     if (error) {
@@ -216,35 +235,37 @@ const AdminDashboard = () => {
     }
     toast({ title: "All photos rejected" });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-photos"] });
-    queryClient.invalidateQueries({ queryKey: [item.type === "concierge" ? "concierge" : "designer", itemId] });
+    queryClient.invalidateQueries({ queryKey: [item.type, itemId] });
   };
 
-  const approveCompany = async (id: string, type: "concierge" | "designer") => {
+  const approveCompany = async (id: string, type: "concierge" | "designer" | "menage") => {
     setProcessing(`${type}-${id}`);
-    const table = type === "concierge" ? "concierge_companies" : "designers";
+    const table = getTableName(type);
     const { error } = await supabase.from(table).update({ status: "approved" }).eq("id", id);
     setProcessing(null);
     if (error) {
       toast({ title: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: `${type === "concierge" ? "Concierge" : "Designer"} approved` });
+    toast({ title: `${type} approved` });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-companies"] });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-designers"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-menage"] });
   };
 
-  const rejectCompany = async (id: string, type: "concierge" | "designer") => {
+  const rejectCompany = async (id: string, type: "concierge" | "designer" | "menage") => {
     setProcessing(`${type}-${id}`);
-    const table = type === "concierge" ? "concierge_companies" : "designers";
+    const table = getTableName(type);
     const { error } = await supabase.from(table).update({ status: "rejected" }).eq("id", id);
     setProcessing(null);
     if (error) {
       toast({ title: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: `${type === "concierge" ? "Concierge" : "Designer"} rejected` });
+    toast({ title: `${type} rejected` });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-companies"] });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-designers"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-menage"] });
   };
 
   if (isAdmin === null) {
@@ -282,9 +303,9 @@ const AdminDashboard = () => {
           <TabsList className="grid w-full max-w-3xl grid-cols-4">
             <TabsTrigger value="companies">
               Companies
-              {(pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0) > 0 && (
+              {(pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0) + (pendingMenage?.length ?? 0) > 0 && (
                 <Badge variant="secondary" className="ml-2">
-                  {(pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0)}
+                  {(pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0) + (pendingMenage?.length ?? 0)}
                 </Badge>
               )}
             </TabsTrigger>
@@ -315,7 +336,7 @@ const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="companies" className="space-y-6">
-            {(!pendingCompanies?.length && !pendingDesigners?.length) ? (
+            {(!pendingCompanies?.length && !pendingDesigners?.length && !pendingMenage?.length) ? (
               <Card className="rounded-2xl">
                 <CardContent className="py-12 text-center">
                   <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
@@ -416,6 +437,52 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 )}
+                {pendingMenage && pendingMenage.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Services de ménage</h3>
+                    <div className="space-y-3">
+                      {pendingMenage.map((m) => (
+                        <Card key={m.id} className="rounded-xl">
+                          <CardHeader className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+                                <Sparkles className="h-5 w-5 text-accent" />
+                              </div>
+                              <div>
+                                <CardTitle className="text-base">{m.name}</CardTitle>
+                                <p className="text-sm text-muted-foreground">{m.city_fr}</p>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                size="sm"
+                                className="gap-1.5 rounded-full bg-green-600 hover:bg-green-700"
+                                onClick={() => approveCompany(m.id, "menage")}
+                                disabled={!!processing}
+                              >
+                                <Check className="h-4 w-4" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 rounded-full text-destructive hover:bg-destructive/10"
+                                onClick={() => rejectCompany(m.id, "menage")}
+                                disabled={!!processing}
+                              >
+                                <X className="h-4 w-4" />
+                                Reject
+                              </Button>
+                              <Button asChild variant="ghost" size="sm" className="rounded-full">
+                                <Link to={`/menage/${m.id}`}>View</Link>
+                              </Button>
+                            </div>
+                          </CardHeader>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
@@ -436,7 +503,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-lg">{c.name}</CardTitle>
-                      <Badge variant="outline" className="text-xs">{c.type === "concierge" ? "Concierge" : "Designer"}</Badge>
+                      <Badge variant="outline" className="text-xs">{c.type === "concierge" ? "Concierge" : c.type === "menage" ? "Ménage" : "Designer"}</Badge>
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -466,7 +533,7 @@ const AdminDashboard = () => {
                       {(c.portfolio_photos_pending ?? []).length} pending
                     </Badge>
                     <Button asChild variant="link" size="sm" className="h-auto p-0">
-                      <Link to={c.type === "concierge" ? `/concierge/${c.id}` : `/designers/${c.id}`}>
+                      <Link to={c.type === "concierge" ? `/concierge/${c.id}` : c.type === "menage" ? `/menage/${c.id}` : `/designers/${c.id}`}>
                         View profile
                       </Link>
                     </Button>
@@ -542,10 +609,10 @@ const AdminDashboard = () => {
                           <p className="text-sm text-muted-foreground">{r.comment}</p>
                           <div className="mt-2 flex flex-wrap gap-2">
                             <Badge variant="outline" className="text-xs">
-                              {r.concierge_company_id ? "Concierge" : "Designer"}
+                              {r.concierge_company_id ? "Concierge" : r.menage_company_id ? "Ménage" : "Designer"}
                             </Badge>
                             <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
-                              <Link to={r.concierge_company_id ? `/concierge/${r.concierge_company_id}` : `/designers/${r.designer_id}`}>
+                              <Link to={r.concierge_company_id ? `/concierge/${r.concierge_company_id}` : r.menage_company_id ? `/menage/${r.menage_company_id}` : `/designers/${r.designer_id}`}>
                                 Voir le profil
                               </Link>
                             </Button>

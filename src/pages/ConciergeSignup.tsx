@@ -16,7 +16,7 @@ import { LogoUpload, PortfolioUpload } from "@/components/ImageUpload";
 import { z } from "zod";
 import { Building2, ChevronDown } from "lucide-react";
 import { CityCombobox, CitiesCoveredCombobox } from "@/components/CityCombobox";
-import { MOROCCAN_CITIES, CONCIERGE_SERVICES, DESIGNER_STYLES, EXPERIENCE_RANGES } from "@/lib/signupData";
+import { MOROCCAN_CITIES, CONCIERGE_SERVICES, MENAGE_SERVICES, DESIGNER_STYLES, EXPERIENCE_RANGES } from "@/lib/signupData";
 
 const signupSchema = z.object({
   email: z.string().trim().email().max(255),
@@ -29,6 +29,14 @@ const signupSchema = z.object({
 });
 
 const conciergeSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  city: z.string().trim().min(1).max(100),
+  description: z.string().trim().min(10).max(2000),
+  services: z.array(z.string()).min(1),
+  citiesCovered: z.array(z.string()).min(1),
+  experience: z.string().min(1),
+});
+const menageSchema = z.object({
   name: z.string().trim().min(1).max(200),
   city: z.string().trim().min(1).max(100),
   description: z.string().trim().min(10).max(2000),
@@ -50,14 +58,14 @@ const ConciergeSignup = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [profType, setProfType] = useState<"concierge" | "designer">("concierge");
+  const [profType, setProfType] = useState<"concierge" | "menage" | "designer">("concierge");
   const [premiumInterest, setPremiumInterest] = useState(false);
 
   const [auth, setAuth] = useState({ email: "", password: "", confirmPassword: "", displayName: "" });
   const [company, setCompany] = useState({
     name: "", city: "", description: "", budgetLevel: "mid-range",
     services: [] as string[], citiesCovered: [] as string[], styles: [] as string[],
-    experience: "", portfolioUrls: "", portfolioPhotos: "",
+    experience: "", portfolioUrls: "", portfolioPhotos: "", whatsapp: "",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [portfolioPhotoUrls, setPortfolioPhotoUrls] = useState<string[]>([]);
@@ -95,10 +103,10 @@ const ConciergeSignup = () => {
     const citiesCovered = [...company.citiesCovered];
     const toValidate = {
       ...company,
-      citiesCovered: profType === "concierge" ? citiesCovered : [],
+      citiesCovered: profType === "concierge" || profType === "menage" ? citiesCovered : [],
       experience: company.experience,
     };
-    const schema = profType === "concierge" ? conciergeSchema : designerSchema;
+    const schema = profType === "concierge" ? conciergeSchema : profType === "menage" ? menageSchema : designerSchema;
     if (!schema.safeParse(toValidate).success) {
       toast({ title: t("form.validationError") as string, variant: "destructive" });
       return;
@@ -138,6 +146,38 @@ const ConciergeSignup = () => {
         portfolio_photos: [],
         portfolio_photos_pending: portfolioPhotosPending,
         experience_years: company.experience || null,
+        whatsapp: company.whatsapp.trim() || null,
+        status: "pending",
+        user_id: user.id,
+      });
+      if (error) {
+        toast({ title: error.message, variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+    } else if (profType === "menage") {
+      const servicesArr = company.services.map(id => MENAGE_SERVICES.find(s => s.id === id)?.fr ?? id);
+      const citiesArr = citiesCovered;
+      const { error } = await supabase.from("menage_companies").insert({
+        name: company.name,
+        logo_url: logoUrl,
+        city_fr: company.city,
+        city_en: company.city,
+        city_ar: company.city,
+        description_fr: company.description,
+        description_en: company.description,
+        description_ar: company.description,
+        services_fr: servicesArr,
+        services_en: company.services.map(id => MENAGE_SERVICES.find(s => s.id === id)?.en ?? id),
+        services_ar: company.services.map(id => MENAGE_SERVICES.find(s => s.id === id)?.ar ?? id),
+        cities_covered_fr: citiesArr,
+        cities_covered_en: citiesArr,
+        cities_covered_ar: citiesArr,
+        portfolio_urls: portfolioUrlsArr,
+        portfolio_photos: [],
+        portfolio_photos_pending: portfolioPhotosPending,
+        experience_years: company.experience || null,
+        whatsapp: company.whatsapp.trim() || null,
         status: "pending",
         user_id: user.id,
       });
@@ -168,6 +208,7 @@ const ConciergeSignup = () => {
         portfolio_photos_pending: portfolioPhotosPending,
         budget_level: budgetLevel,
         experience_years: company.experience || null,
+        whatsapp: company.whatsapp.trim() || null,
         status: "pending",
         user_id: user.id,
       });
@@ -264,6 +305,7 @@ const ConciergeSignup = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="concierge">{t("signup.type.concierge") as string}</SelectItem>
+                      <SelectItem value="menage">{t("signup.type.menage") as string}</SelectItem>
                       <SelectItem value="designer">{t("signup.type.designer") as string}</SelectItem>
                     </SelectContent>
                   </Select>
@@ -275,6 +317,14 @@ const ConciergeSignup = () => {
                   required
                   className="rounded-lg"
                 />
+                <Input
+                  type="tel"
+                  placeholder={t("form.whatsapp") as string}
+                  value={company.whatsapp}
+                  onChange={(e) => setCompany(p => ({ ...p, whatsapp: e.target.value }))}
+                  className="rounded-lg"
+                />
+                <p className="text-xs text-muted-foreground -mt-3">{t("form.whatsappHint") as string}</p>
                 <div>
                   <Label className="mb-2 block text-sm font-medium">{t("form.city") as string}</Label>
                   <CityCombobox
@@ -295,12 +345,12 @@ const ConciergeSignup = () => {
                   rows={4}
                   className="rounded-lg"
                 />
-                {profType === "concierge" && (
+                {(profType === "concierge" || profType === "menage") && (
                   <>
                     <div>
                       <Label className="mb-3 block text-sm font-medium">{t("form.servicesList") as string}</Label>
                       <div className="grid gap-2 sm:grid-cols-2">
-                        {CONCIERGE_SERVICES.map((s) => (
+                        {(profType === "concierge" ? CONCIERGE_SERVICES : MENAGE_SERVICES).map((s) => (
                           <label key={s.id} className="flex items-center gap-2 cursor-pointer">
                             <Checkbox
                               checked={company.services.includes(s.id)}
@@ -329,15 +379,13 @@ const ConciergeSignup = () => {
                     </div>
                   </>
                 )}
-                {(profType === "concierge" || profType === "designer") && (
-                  <LogoUpload
-                    value={logoUrl ?? undefined}
-                    onChange={setLogoUrl}
-                    label={t("form.logo") as string}
-                    hint={t("form.logoHint") as string}
-                  />
-                )}
-                {profType === "concierge" && (
+                <LogoUpload
+                  value={logoUrl ?? undefined}
+                  onChange={setLogoUrl}
+                  label={t("form.logo") as string}
+                  hint={t("form.logoHint") as string}
+                />
+                {(profType === "concierge" || profType === "menage") && (
                   <>
                     <PortfolioUpload
                       value={portfolioPhotoUrls}

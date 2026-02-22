@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Paintbrush, MapPin, Award, ArrowRight } from "lucide-react";
+import { RatingBadge } from "@/components/RatingBadge";
+import { useReviewStats } from "@/hooks/useReviewStats";
 
 const DesignersDirectory = () => {
   const { lang, t } = useLanguage();
@@ -28,6 +31,11 @@ const DesignersDirectory = () => {
     },
   });
 
+  const { data: reviewStats } = useReviewStats(
+    "designer_id",
+    designers?.map((d) => d.id),
+  );
+
   const getCity = (d: any) => lang === "ar" ? (d.city_ar || d.city_fr) : lang === "en" ? d.city_en : d.city_fr;
   const getDesc = (d: any) => lang === "ar" ? (d.description_ar || d.description_fr) : lang === "en" ? d.description_en : d.description_fr;
   const getStyles = (d: any) => lang === "ar" ? (d.styles_ar?.length ? d.styles_ar : d.styles_fr) : lang === "en" ? d.styles_en : d.styles_fr;
@@ -46,6 +54,7 @@ const DesignersDirectory = () => {
 
   return (
     <main className="py-16 md:py-24">
+      <PageMeta title={t("designers.title") as string} description={t("designers.subtitle") as string} />
       <div className="container">
         <div className="mx-auto max-w-2xl text-center mb-12">
           <h1 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">
@@ -112,10 +121,15 @@ const DesignersDirectory = () => {
                       )}
                     </div>
                     <CardTitle className="mt-3 text-lg">{d.name}</CardTitle>
-                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {getCity(d)}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {getCity(d)}
+                      </p>
+                      {reviewStats?.[d.id] && (
+                        <RatingBadge avg={reviewStats[d.id].avg} count={reviewStats[d.id].count} />
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="flex-1 space-y-3">
                     <p className="text-sm text-muted-foreground line-clamp-2">{getDesc(d)}</p>
