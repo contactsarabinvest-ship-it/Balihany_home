@@ -96,6 +96,27 @@ const AdminDashboard = () => {
     enabled: !!userId && isAdmin === true,
   });
 
+  const { data: allSubmissions } = useQuery({
+    queryKey: ["admin-all-submissions", userId, isAdmin],
+    queryFn: async () => {
+      const [cRes, dRes, mRes] = await Promise.all([
+        supabase.from("concierge_companies").select("id, name, city_fr, status, created_at").order("created_at", { ascending: false }),
+        supabase.from("designers").select("id, name, city_fr, status, created_at").order("created_at", { ascending: false }),
+        supabase.from("menage_companies").select("id, name, city_fr, status, created_at").order("created_at", { ascending: false }),
+      ]);
+      if (cRes.error) throw cRes.error;
+      if (dRes.error) throw dRes.error;
+      if (mRes.error) throw mRes.error;
+      const concierge = (cRes.data ?? []).map((r) => ({ ...r, type: "concierge" as const }));
+      const designers = (dRes.data ?? []).map((r) => ({ ...r, type: "designer" as const }));
+      const menage = (mRes.data ?? []).map((r) => ({ ...r, type: "menage" as const }));
+      return [...concierge, ...designers, ...menage].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    },
+    enabled: !!userId && isAdmin === true,
+  });
+
   const { data: contactLeads } = useQuery({
     queryKey: ["admin-contact-leads", userId, isAdmin],
     queryFn: async () => {
@@ -299,10 +320,18 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="companies" className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl grid-cols-4">
+        <Tabs defaultValue="inscriptions" className="space-y-6">
+          <TabsList className="grid w-full max-w-4xl grid-cols-5">
+            <TabsTrigger value="inscriptions">
+              Inscriptions
+              {(allSubmissions?.length ?? 0) > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {allSubmissions?.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="companies">
-              Companies
+              En attente
               {(pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0) + (pendingMenage?.length ?? 0) > 0 && (
                 <Badge variant="secondary" className="ml-2">
                   {(pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0) + (pendingMenage?.length ?? 0)}
@@ -334,6 +363,95 @@ const AdminDashboard = () => {
               )}
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="inscriptions" className="space-y-6">
+            <p className="text-sm text-muted-foreground">
+              Toutes les demandes d&apos;inscription (conciergerie, ménage, designers) avec leur statut.
+            </p>
+            {!allSubmissions?.length ? (
+              <Card className="rounded-2xl">
+                <CardContent className="py-12 text-center">
+                  <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <p className="text-muted-foreground">Aucune inscription trouvée.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {allSubmissions.map((item) => (
+                  <Card key={`${item.type}-${item.id}`} className="rounded-xl">
+                    <CardHeader className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${item.type === "designer" ? "bg-terracotta-light" : "bg-accent/10"}`}>
+                          {item.type === "concierge" ? (
+                            <Building2 className="h-5 w-5 text-accent" />
+                          ) : item.type === "menage" ? (
+                            <Sparkles className="h-5 w-5 text-accent" />
+                          ) : (
+                            <Paintbrush className="h-5 w-5 text-terracotta" />
+                          )}
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">{item.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            {item.city_fr} • {item.type === "concierge" ? "Conciergerie" : item.type === "menage" ? "Ménage" : "Designer"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge
+                          variant={
+                            item.status === "approved"
+                              ? "default"
+                              : item.status === "rejected"
+                                ? "destructive"
+                                : "secondary"
+                          }
+                        >
+                          {item.status === "approved" ? "Approuvé" : item.status === "rejected" ? "Rejeté" : "En attente"}
+                        </Badge>
+                        <Button asChild variant="ghost" size="sm" className="rounded-full">
+                          <Link
+                            to={
+                              item.type === "concierge"
+                                ? `/concierge/${item.id}`
+                                : item.type === "menage"
+                                  ? `/menage/${item.id}`
+                                  : `/designers/${item.id}`
+                            }
+                          >
+                            Voir
+                          </Link>
+                        </Button>
+                        {item.status === "pending" && (
+                          <>
+                            <Button
+                              size="sm"
+                              className="gap-1.5 rounded-full bg-green-600 hover:bg-green-700"
+                              onClick={() => approveCompany(item.id, item.type)}
+                              disabled={!!processing}
+                            >
+                              <Check className="h-4 w-4" />
+                              Approuver
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 rounded-full text-destructive hover:bg-destructive/10"
+                              onClick={() => rejectCompany(item.id, item.type)}
+                              disabled={!!processing}
+                            >
+                              <X className="h-4 w-4" />
+                              Rejeter
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="companies" className="space-y-6">
             {(!pendingCompanies?.length && !pendingDesigners?.length && !pendingMenage?.length) ? (

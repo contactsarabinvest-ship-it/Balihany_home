@@ -285,6 +285,9 @@ export const translations = {
   "auth.login.noAccount": { fr: "Pas de compte ?", en: "No account?", ar: "ليس لديك حساب؟" },
   "auth.login.hasAccount": { fr: "Déjà un compte ?", en: "Already have an account?", ar: "لديك حساب بالفعل؟" },
   "auth.pendingMessage": { fr: "Votre inscription est en cours de validation par notre équipe.", en: "Your registration is being reviewed by our team.", ar: "تسجيلك قيد المراجعة من فريقنا." },
+  "dashboard.noProfile": { fr: "Vous n'avez pas encore créé de profil professionnel. Complétez votre inscription pour apparaître dans notre annuaire.", en: "You haven't created a professional profile yet. Complete your registration to appear in our directory.", ar: "لم تنشئ ملفًا مهنيًا بعد. أكمل تسجيلك للظهور في دليلنا." },
+  "dashboard.completeSignup": { fr: "Compléter mon inscription", en: "Complete my registration", ar: "إكمال تسجيلي" },
+  "dashboard.pendingBanner": { fr: "Votre demande est en cours d'examen. Vous pouvez modifier les informations ci-dessous avant validation.", en: "Your request is under review. You can modify the information below before approval.", ar: "طلبك قيد المراجعة. يمكنك تعديل المعلومات أدناه قبل الموافقة." },
 
   // Signup steps
   "signup.step1": { fr: "Étape 1 : Créer un compte", en: "Step 1: Create Account", ar: "الخطوة 1: إنشاء حساب" },

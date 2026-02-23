@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,7 +56,9 @@ const ConciergeSignup = () => {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const [searchParams] = useSearchParams();
+  const completeParam = searchParams.get("complete") === "1";
+  const [step, setStep] = useState(completeParam ? 2 : 1);
   const [loading, setLoading] = useState(false);
   const [profType, setProfType] = useState<"concierge" | "menage" | "designer">("concierge");
   const [premiumInterest, setPremiumInterest] = useState(false);
@@ -69,6 +71,15 @@ const ConciergeSignup = () => {
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [portfolioPhotoUrls, setPortfolioPhotoUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!completeParam) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session && completeParam) {
+        navigate("/login");
+      }
+    });
+  }, [completeParam, navigate]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -324,6 +324,25 @@ const Dashboard = () => {
     cancelEdit();
   };
 
+  useEffect(() => {
+    if (editingType) return;
+    if (!companies?.length && !designers?.length && !menageCompanies?.length) return;
+    const firstPending = companies?.find((c) => c.status === "pending");
+    if (firstPending) {
+      startEditConcierge(firstPending);
+      return;
+    }
+    const firstPendingMenage = menageCompanies?.find((m) => m.status === "pending");
+    if (firstPendingMenage) {
+      startEditMenage(firstPendingMenage);
+      return;
+    }
+    const firstPendingDesigner = designers?.find((d) => d.status === "pending");
+    if (firstPendingDesigner) {
+      startEditDesigner(firstPendingDesigner);
+    }
+  }, [companies?.length, designers?.length, menageCompanies?.length]);
+
   const budgetLabel = (level: string) => {
     const key = `designers.budget.${level}` as "designers.budget.accessible" | "designers.budget.mid-range" | "designers.budget.premium";
     return t(key) as string;
@@ -416,7 +435,14 @@ const Dashboard = () => {
         </h1>
 
         {(companies?.length === 0 && designers?.length === 0 && menageCompanies?.length === 0) && (
-          <p className="text-muted-foreground">{t("auth.pendingMessage") as string}</p>
+          <Card className="rounded-2xl border-dashed">
+            <CardContent className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+              <p className="max-w-md text-muted-foreground">{t("dashboard.noProfile") as string}</p>
+              <Button asChild className="rounded-full">
+                <Link to="/concierge-signup?complete=1">{t("dashboard.completeSignup") as string}</Link>
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {companies && companies.length > 0 && (
@@ -462,6 +488,11 @@ const Dashboard = () => {
               <CardContent>
                 {editingType === "concierge" && editingId === c.id && conciergeForm ? (
                   <form onSubmit={handleSaveConcierge} className="space-y-4">
+                    {c.status === "pending" && (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        {t("dashboard.pendingBanner") as string}
+                      </div>
+                    )}
                     {renderEditFormFields(conciergeForm, setConciergeForm, c.portfolio_photos ?? [])}
                     <div>
                       <Label className="mb-1.5 block text-sm">{t("form.servicesList") as string}</Label>
@@ -528,6 +559,11 @@ const Dashboard = () => {
                   <CardContent>
                     {editingType === "menage" && editingId === m.id && menageForm ? (
                       <form onSubmit={handleSaveMenage} className="space-y-4">
+                        {m.status === "pending" && (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                            {t("dashboard.pendingBanner") as string}
+                          </div>
+                        )}
                         {renderEditFormFields(menageForm, setMenageForm, m.portfolio_photos ?? [])}
                         <div>
                           <Label className="mb-1.5 block text-sm">{t("form.servicesList") as string}</Label>
@@ -594,6 +630,11 @@ const Dashboard = () => {
               <CardContent>
                 {editingType === "designer" && editingId === d.id && designerForm ? (
                   <form onSubmit={handleSaveDesigner} className="space-y-4">
+                    {d.status === "pending" && (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        {t("dashboard.pendingBanner") as string}
+                      </div>
+                    )}
                     {renderEditFormFields(designerForm, setDesignerForm, d.portfolio_photos ?? [])}
                     <div>
                       <Label className="mb-1.5 block text-sm">{t("form.styles") as string}</Label>
