@@ -110,7 +110,12 @@ export function ReviewsSection({ conciergeCompanyId, designerId, menageCompanyId
             <Card key={review.id} className="rounded-xl">
               <CardContent className="pt-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">{review.author_name}</span>
+                  <span className="font-medium">
+                    {review.author_name}
+                    {review.status === "pending" && (
+                      <span className="text-muted-foreground font-normal"> ({t("reviews.pendingApproval") as string})</span>
+                    )}
+                  </span>
                   <div className="flex">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star

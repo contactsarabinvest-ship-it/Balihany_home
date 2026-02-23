@@ -16,7 +16,10 @@ interface ImageUploadProps {
 export function LogoUpload({ value, onChange, label, hint, className, disabled }: ImageUploadProps) {
   const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const displayUrl = previewUrl || value;
 
   const handleUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,6 +33,8 @@ export function LogoUpload({ value, onChange, label, hint, className, disabled }
         return;
       }
       setError(null);
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
       setUploading(true);
       try {
         const { data: { user } } = await import("@/integrations/supabase/client").then((m) => m.supabase.auth.getUser());
@@ -48,6 +53,8 @@ export function LogoUpload({ value, onChange, label, hint, className, disabled }
         }
       } finally {
         setUploading(false);
+        setPreviewUrl(null);
+        URL.revokeObjectURL(objectUrl);
         e.target.value = "";
       }
     },
@@ -59,8 +66,8 @@ export function LogoUpload({ value, onChange, label, hint, className, disabled }
       {label && <p className="text-sm font-medium">{label}</p>}
       <div className="flex items-center gap-4">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted">
-          {value ? (
-            <img src={value} alt="Logo preview" className="h-full w-full object-cover" />
+          {displayUrl ? (
+            <img src={displayUrl} alt="Logo preview" className="h-full w-full object-cover" loading="eager" />
           ) : (
             <ImageIcon className="h-8 w-8 text-muted-foreground" />
           )}
@@ -124,7 +131,10 @@ export function PortfolioUpload({
 }: PortfolioUploadProps) {
   const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  const displayUrls = [...value, ...previewUrls];
 
   const handleUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,14 +156,18 @@ export function PortfolioUpload({
         setError(null);
       }
 
+      const validFiles: File[] = [];
+      for (const f of toUpload) {
+        const v = validateImageFile(f, "portfolio");
+        if (v) setError(v);
+        else validFiles.push(f);
+      }
+      const objectUrls = validFiles.map((f) => URL.createObjectURL(f));
+      setPreviewUrls(objectUrls);
       setUploading(true);
+
       const newUrls: string[] = [];
-      for (const file of toUpload) {
-        const validation = validateImageFile(file, "portfolio");
-        if (validation) {
-          setError(validation);
-          continue;
-        }
+      for (const file of validFiles) {
         try {
           const url = await uploadPortfolioImage(user.id, file);
           newUrls.push(url);
@@ -166,9 +180,12 @@ export function PortfolioUpload({
           }
         }
       }
+
       if (newUrls.length > 0) {
         onChange([...value, ...newUrls]);
       }
+      objectUrls.forEach((u) => URL.revokeObjectURL(u));
+      setPreviewUrls([]);
       setUploading(false);
       e.target.value = "";
     },
@@ -176,17 +193,19 @@ export function PortfolioUpload({
   );
 
   const remove = (index: number) => {
-    onChange(value.filter((_, i) => i !== index));
+    if (index < value.length) {
+      onChange(value.filter((_, i) => i !== index));
+    }
   };
 
   return (
     <div className={cn("space-y-2", className)}>
       {label && <p className="text-sm font-medium">{label}</p>}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {value.map((url, i) => (
+        {displayUrls.map((url, i) => (
           <div key={url} className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted">
-            <img src={url} alt={`Portfolio ${i + 1}`} className="h-full w-full object-cover" />
-            {!disabled && (
+            <img src={url} alt={`Portfolio ${i + 1}`} className="h-full w-full object-cover" loading="eager" />
+            {!disabled && i < value.length && (
               <button
                 type="button"
                 onClick={() => remove(i)}
@@ -198,7 +217,7 @@ export function PortfolioUpload({
             )}
           </div>
         ))}
-        {value.length < maxFiles && (
+        {displayUrls.length < maxFiles && (
           <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border bg-muted/50 transition-colors hover:bg-muted">
             <input
               type="file"

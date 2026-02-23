@@ -140,6 +140,7 @@ export const translations = {
   "reviews.count": { fr: "avis", en: "reviews", ar: "تقييمات" },
   "reviews.submitError": { fr: "Impossible de publier l'avis. Vérifiez que la base de données est configurée.", en: "Could not submit review. Check that the database is configured.", ar: "تعذر نشر التقييم." },
   "reviews.submitPending": { fr: "Merci ! Votre avis a été soumis et sera publié après validation par notre équipe.", en: "Thank you! Your review has been submitted and will be published after our team approves it.", ar: "شكراً! تم إرسال تقييمك وسيتم نشره بعد الموافقة." },
+  "reviews.pendingApproval": { fr: "en cours d'approbation", en: "pending approval", ar: "في انتظار الموافقة" },
   "form.logo": { fr: "Logo de l'entreprise", en: "Company logo", ar: "شعار الشركة" },
   "form.logoHint": { fr: "PNG, JPG ou WebP, max 10 Mo", en: "PNG, JPG or WebP, max 10MB", ar: "PNG أو JPG أو WebP، حد أقصى 10 ميجا" },
   "form.uploadPhotos": { fr: "Télécharger des photos", en: "Upload photos", ar: "تحميل الصور" },

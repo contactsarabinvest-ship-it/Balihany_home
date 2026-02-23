@@ -1,3 +1,4 @@
+import imageCompression from "browser-image-compression";
 import { supabase } from "@/integrations/supabase/client";
 
 const LOGOS_BUCKET = "logos";
@@ -24,11 +25,39 @@ function getPublicUrl(bucket: string, path: string): string {
   return data.publicUrl;
 }
 
+const SKIP_COMPRESS_LOGO_BYTES = 300 * 1024;   // 300 KB — pas de compression si déjà petit
+const SKIP_COMPRESS_PORTFOLIO_BYTES = 800 * 1024; // 800 KB
+
+async function compressImage(
+  file: File,
+  options: { maxSizeMB: number; maxWidthOrHeight: number; quality: number; skipIfUnder?: number }
+): Promise<File> {
+  if (options.skipIfUnder && file.size < options.skipIfUnder) return file;
+  try {
+    const compressed = await imageCompression(file, {
+      maxSizeMB: options.maxSizeMB,
+      maxWidthOrHeight: options.maxWidthOrHeight,
+      initialQuality: options.quality,
+      useWebWorker: false, // plus rapide pour les images moyennes
+    });
+    return new File([compressed], file.name, { type: compressed.type });
+  } catch {
+    return file;
+  }
+}
+
 export async function uploadLogo(userId: string, file: File): Promise<string> {
   const ext = file.name.split(".").pop() || "png";
   const path = `${userId}/logo-${Date.now()}.${ext}`;
 
-  const { error } = await supabase.storage.from(LOGOS_BUCKET).upload(path, file, {
+  const toUpload = await compressImage(file, {
+    maxSizeMB: 0.5,
+    maxWidthOrHeight: 512,
+    quality: 0.85,
+    skipIfUnder: SKIP_COMPRESS_LOGO_BYTES,
+  });
+
+  const { error } = await supabase.storage.from(LOGOS_BUCKET).upload(path, toUpload, {
     upsert: true,
   });
 
@@ -40,7 +69,14 @@ export async function uploadPortfolioImage(userId: string, file: File): Promise<
   const ext = file.name.split(".").pop() || "png";
   const path = `${userId}/${Date.now()}-${file.name}`;
 
-  const { error } = await supabase.storage.from(PORTFOLIO_BUCKET).upload(path, file, {
+  const toUpload = await compressImage(file, {
+    maxSizeMB: 2,
+    maxWidthOrHeight: 1920,
+    quality: 0.85,
+    skipIfUnder: SKIP_COMPRESS_PORTFOLIO_BYTES,
+  });
+
+  const { error } = await supabase.storage.from(PORTFOLIO_BUCKET).upload(path, toUpload, {
     upsert: false,
   });
 
