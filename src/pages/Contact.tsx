@@ -29,18 +29,23 @@ const Contact = () => {
     e.preventDefault();
     if (!contactSchema.safeParse(form).success) return;
     setLoading(true);
-
-    await supabase.from("contact_submissions").insert({
-      name: form.name,
-      email: form.email,
-      subject: form.subject,
-      message: form.message,
-      source: "contact",
-    });
-
-    setLoading(false);
-    toast({ title: t("contact.success") as string });
-    setForm({ name: "", email: "", subject: "", message: "" });
+    try {
+      const { error } = await supabase.from("contact_submissions").insert({
+        name: form.name,
+        email: form.email,
+        subject: form.subject,
+        message: form.message,
+        source: "contact",
+      });
+      if (error) {
+        toast({ title: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: t("contact.success") as string });
+      setForm({ name: "", email: "", subject: "", message: "" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -7,6 +7,7 @@
 //   3. Set secrets:
 //        supabase secrets set RESEND_API_KEY=re_xxxxx
 //        supabase secrets set NOTIFICATION_FROM_EMAIL=noreply@balihany.com
+//        supabase secrets set CONTACT_EMAIL=contact@balihany.com  (optionnel, défaut: contact@balihany.com)
 //   4. Deploy: supabase functions deploy notify-pro
 //   5. Run the SQL in SETUP_EMAIL_NOTIFICATIONS.sql in the Supabase SQL Editor
 //
@@ -15,15 +16,34 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const FROM_EMAIL = Deno.env.get("NOTIFICATION_FROM_EMAIL") || "noreply@balihany.com";
+const FROM_EMAIL = Deno.env.get("NOTIFICATION_FROM_EMAIL") || "onboarding@resend.dev";
+const CONTACT_EMAIL = Deno.env.get("CONTACT_EMAIL") || "contactsarabinvest@gmail.com";
 
 interface ContactSubmission {
   id: string;
   name: string;
   email: string;
   phone: string | null;
+  subject: string | null;
   message: string | null;
   source: string;
+}
+
+async function sendEmail(to: string[], subject: string, html: string) {
+  const emailRes = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: `BaliHany <${FROM_EMAIL}>`,
+      to,
+      subject,
+      html,
+    }),
+  });
+  return emailRes.json();
 }
 
 Deno.serve(async (req) => {
@@ -31,7 +51,30 @@ Deno.serve(async (req) => {
     const { record } = (await req.json()) as { record: ContactSubmission };
     const source = record.source || "";
 
-    // Only process pro profile contact forms (concierge-xxx, menage-xxx, designer-xxx)
+    // Cas 1: Formulaire contact général (page Contacter) → envoyer à contact@balihany.com
+    if (source === "contact") {
+      const subject = record.subject
+        ? `[BaliHany Contact] ${record.subject}`
+        : `Nouveau message de ${record.name} — BaliHany`;
+      const html = `
+        <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+          <h2 style="color:#2d6a4f">Nouveau message via le formulaire de contact</h2>
+          <p>Un visiteur a envoyé un message depuis la page Contacter :</p>
+          <table style="width:100%;border-collapse:collapse;margin:16px 0">
+            <tr><td style="padding:8px 0;color:#666">Nom</td><td style="padding:8px 0"><strong>${record.name}</strong></td></tr>
+            <tr><td style="padding:8px 0;color:#666">Email</td><td style="padding:8px 0"><a href="mailto:${record.email}">${record.email}</a></td></tr>
+            ${record.subject ? `<tr><td style="padding:8px 0;color:#666">Sujet</td><td style="padding:8px 0">${record.subject}</td></tr>` : ""}
+            ${record.message ? `<tr><td style="padding:8px 0;color:#666;vertical-align:top">Message</td><td style="padding:8px 0">${record.message.replace(/\n/g, "<br>")}</td></tr>` : ""}
+          </table>
+          <hr style="border:none;border-top:1px solid #eee;margin:24px 0" />
+          <p style="font-size:12px;color:#999">Cet email a été envoyé automatiquement par BaliHany.</p>
+        </div>
+      `;
+      const emailResult = await sendEmail([CONTACT_EMAIL], subject, html);
+      return new Response(JSON.stringify({ sent: true, to: CONTACT_EMAIL, emailResult }), { status: 200 });
+    }
+
+    // Cas 2: Formulaire depuis un profil prestataire (concierge/menage/designer)
     const match = source.match(/^(concierge|menage|designer)-(.+)$/);
     if (!match) {
       return new Response(JSON.stringify({ skipped: true }), { status: 200 });
@@ -43,7 +86,6 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Look up the professional's email via their user_id → auth.users
     const table =
       type === "concierge"
         ? "concierge_companies"
@@ -68,18 +110,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ skipped: true, reason: "no email" }), { status: 200 });
     }
 
-    // Send email via Resend
-    const emailRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: `BaliHany <${FROM_EMAIL}>`,
-        to: [proEmail],
-        subject: `Nouveau message de ${record.name} — BaliHany`,
-        html: `
+    const html = `
           <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
             <h2 style="color:#2d6a4f">Nouveau message client</h2>
             <p>Bonjour <strong>${pro.name}</strong>,</p>
@@ -94,11 +125,9 @@ Deno.serve(async (req) => {
             <hr style="border:none;border-top:1px solid #eee;margin:24px 0" />
             <p style="font-size:12px;color:#999">Cet email a été envoyé automatiquement par BaliHany.</p>
           </div>
-        `,
-      }),
-    });
+        `;
 
-    const emailResult = await emailRes.json();
+    const emailResult = await sendEmail([proEmail], `Nouveau message de ${record.name} — BaliHany`, html);
     return new Response(JSON.stringify({ sent: true, emailResult }), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), { status: 500 });
