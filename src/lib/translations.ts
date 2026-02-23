@@ -31,6 +31,8 @@ export const translations = {
     en: "Designed for Airbnb hosts in Morocco",
     ar: "مصمم لمضيفي Airbnb في المغرب",
   },
+  "banner.investmentReady": { fr: "Prêt pour votre prochain investissement ?", en: "Ready for your next investment?", ar: "مستعد لاستثمارك القادم؟" },
+  "banner.calcCta": { fr: "Calculer la rentabilité", en: "Calculate Profitability", ar: "احسب الربحية" },
   "hero.cta.concierge": { fr: "Trouver un concierge", en: "Find a Concierge", ar: "ابحث عن كونسيرج" },
   "hero.cta.designer": { fr: "Trouver un designer", en: "Find a Designer", ar: "ابحث عن مصمم" },
   "hero.cta.menage": { fr: "Services de ménage", en: "Cleaning Services", ar: "خدمات التنظيف" },
