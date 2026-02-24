@@ -74,7 +74,6 @@ const Header = () => {
     { to: "/", label: t("nav.home") as string },
     { to: "/calculator", label: t("nav.calculator") as string },
     { to: "/blog", label: t("nav.blog") as string },
-    { to: "/contact", label: t("nav.contact") as string },
   ];
 
   const handleLogout = async () => {

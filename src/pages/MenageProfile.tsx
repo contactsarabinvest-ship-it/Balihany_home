@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PortfolioLightbox } from "@/components/PortfolioLightbox";
 import { useParams, Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ const MenageProfile = () => {
   const { lang, t } = useLanguage();
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const { data: company, isLoading } = useQuery({
     queryKey: ["menage", id],
@@ -185,21 +188,30 @@ const MenageProfile = () => {
                     <p className="mb-3 text-sm font-medium text-muted-foreground">{t("menage.portfolio.photos") as string}</p>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       {company.portfolio_photos.map((photoUrl: string, i: number) => (
-                        <a
+                        <button
                           key={i}
-                          href={photoUrl.startsWith("http") ? photoUrl : `https://${photoUrl}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted"
+                          type="button"
+                          onClick={() => {
+                            setLightboxIndex(i);
+                            setLightboxOpen(true);
+                          }}
+                          className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted text-left"
                         >
                           <img
                             src={photoUrl.startsWith("http") ? photoUrl : `https://${photoUrl}`}
                             alt={`${company.name} - ${i + 1}`}
                             className="h-full w-full object-cover transition-transform group-hover:scale-105"
                           />
-                        </a>
+                        </button>
                       ))}
                     </div>
+                    <PortfolioLightbox
+                      open={lightboxOpen}
+                      onOpenChange={setLightboxOpen}
+                      photos={company.portfolio_photos}
+                      initialIndex={lightboxIndex}
+                      title={company.name}
+                    />
                   </div>
                 )}
               </div>
