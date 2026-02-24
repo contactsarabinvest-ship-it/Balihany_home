@@ -83,63 +83,23 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-      <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+      <div className="container flex h-16 items-center gap-6 md:gap-8">
+        {/* Logo — gauche */}
+        <Link to="/" className="flex shrink-0 items-center gap-2">
           <img
             src="/balihany-logo.png"
             alt="BaliHany"
-            className="h-10 w-10 object-contain"
+            className="h-9 w-9 object-contain md:h-10 md:w-10"
           />
-          <span className="text-2xl font-extrabold tracking-tight text-foreground">
+          <span className="text-xl font-extrabold tracking-tight text-foreground md:text-2xl">
             BaliHany
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-8 md:flex">
-          <Link
-            to="/"
-            className={`text-sm font-medium transition-colors hover:text-accent ${
-              location.pathname === "/" ? "text-accent" : "text-muted-foreground"
-            }`}
-          >
-            {t("nav.home") as string}
-          </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={`flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-accent ${
-                  isFindProsActive ? "text-accent" : "text-muted-foreground"
-                }`}
-              >
-                {t("nav.findPros") as string}
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {findProsItems.map((item) => (
-                <DropdownMenuItem key={item.to} asChild>
-                  <Link to={item.to}>{item.label}</Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {links.slice(1).map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`text-sm font-medium transition-colors hover:text-accent ${
-                location.pathname === link.to ? "text-accent" : "text-muted-foreground"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="hidden flex-1 max-w-xs mx-4 md:flex" ref={searchRef}>
+        {/* Barre de recherche — centre (style Houzz) */}
+        <div className="hidden flex-1 min-w-0 max-w-xl md:flex" ref={searchRef}>
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               type="search"
               placeholder={t("nav.searchPlaceholder") as string}
@@ -149,7 +109,7 @@ const Header = () => {
                 setSearchOpen(e.target.value.trim().length >= 2);
               }}
               onFocus={() => searchQuery.trim().length >= 2 && setSearchOpen(true)}
-              className="pl-9 h-9 rounded-full bg-muted/50 border-border"
+              className="h-9 w-full pl-9 pr-4 rounded-lg border-border bg-muted/40 text-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-accent/20"
             />
             {searchOpen && searchQuery.trim().length >= 2 && (
               <div className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-card shadow-lg z-50 max-h-[70vh] overflow-y-auto">
@@ -223,10 +183,53 @@ const Header = () => {
           </div>
         </div>
 
-        <div className="hidden items-center gap-3 md:flex">
+        {/* Nav — après la recherche */}
+        <nav className="hidden shrink-0 items-center gap-5 md:flex lg:gap-6">
+          <Link
+            to="/"
+            className={`text-sm font-medium transition-colors hover:text-accent whitespace-nowrap ${
+              location.pathname === "/" ? "text-accent" : "text-muted-foreground"
+            }`}
+          >
+            {t("nav.home") as string}
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary">
+              <button
+                className={`flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-accent whitespace-nowrap ${
+                  isFindProsActive ? "text-accent" : "text-muted-foreground"
+                }`}
+              >
+                {t("nav.findPros") as string}
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {findProsItems.map((item) => (
+                <DropdownMenuItem key={item.to} asChild>
+                  <Link to={item.to}>{item.label}</Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {links.slice(1).map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`text-sm font-medium transition-colors hover:text-accent whitespace-nowrap ${
+                location.pathname === link.to ? "text-accent" : "text-muted-foreground"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Langue + Compte — droite */}
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary">
                 <Globe className="h-4 w-4" />
                 {langLabels[lang]}
                 <ChevronDown className="h-3 w-3" />
@@ -253,8 +256,8 @@ const Header = () => {
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-                    <User className="h-4 w-4" />
+                  <button className="flex items-center gap-2 rounded-lg border border-border px-2.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+                    <User className="h-4 w-4 shrink-0" />
                     <span className="max-w-[140px] truncate">
                       {(user.user_metadata?.display_name as string) || user.email}
                     </span>
@@ -282,7 +285,7 @@ const Header = () => {
               <Button asChild variant="ghost" size="sm">
                 <Link to="/login">{t("nav.login") as string}</Link>
               </Button>
-              <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full">
+              <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg">
                 <Link to="/concierge-signup">{t("nav.signup") as string}</Link>
               </Button>
             </>
