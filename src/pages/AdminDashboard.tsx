@@ -9,7 +9,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Sparkles, Mail, Calculator, Star, MessageSquare } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Sparkles, Mail, Calculator, Star, MessageSquare, Trash2 } from "lucide-react";
 
 const AdminDashboard = () => {
   const { t } = useLanguage();
@@ -19,6 +29,7 @@ const AdminDashboard = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [leadToDelete, setLeadToDelete] = useState<{ type: "contact" | "calculator"; id: string } | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -287,6 +298,52 @@ const AdminDashboard = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-pending-companies"] });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-designers"] });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-menage"] });
+  };
+
+  const deleteContactLead = async (id: string) => {
+    setProcessing(`contact-${id}`);
+    const { data, error } = await supabase
+      .from("contact_submissions")
+      .delete()
+      .eq("id", id)
+      .select("id");
+    setProcessing(null);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    if (!data?.length) {
+      toast({
+        title: "Suppression refusée (droits ou migration RLS manquante)",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: "Lead contact supprimé" });
+    queryClient.invalidateQueries({ queryKey: ["admin-contact-leads"] });
+  };
+
+  const deleteCalculatorLead = async (id: string) => {
+    setProcessing(`calc-${id}`);
+    const { data, error } = await supabase
+      .from("calculator_leads")
+      .delete()
+      .eq("id", id)
+      .select("id");
+    setProcessing(null);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    if (!data?.length) {
+      toast({
+        title: "Suppression refusée (droits ou migration RLS manquante)",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: "Lead calculateur supprimé" });
+    queryClient.invalidateQueries({ queryKey: ["admin-calculator-leads"] });
   };
 
   if (isAdmin === null) {
@@ -795,7 +852,19 @@ const AdminDashboard = () => {
                               <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{lead.message}</p>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground shrink-0">{formatDate(lead.created_at)}</p>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <p className="text-xs text-muted-foreground">{formatDate(lead.created_at)}</p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 rounded-full p-0 text-destructive hover:bg-destructive/10"
+                              onClick={() => setLeadToDelete({ type: "contact", id: lead.id })}
+                              disabled={processing === `contact-${lead.id}`}
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -834,7 +903,19 @@ const AdminDashboard = () => {
                               )}
                             </div>
                           </div>
-                          <p className="text-xs text-muted-foreground shrink-0">{formatDate(lead.created_at)}</p>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <p className="text-xs text-muted-foreground">{formatDate(lead.created_at)}</p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 rounded-full p-0 text-destructive hover:bg-destructive/10"
+                              onClick={() => setLeadToDelete({ type: "calculator", id: lead.id })}
+                              disabled={processing === `calc-${lead.id}`}
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -845,6 +926,31 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AlertDialog open={!!leadToDelete} onOpenChange={(open) => !open && setLeadToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce lead ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voulez-vous vraiment supprimer ce lead ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!leadToDelete) return;
+                if (leadToDelete.type === "contact") await deleteContactLead(leadToDelete.id);
+                else await deleteCalculatorLead(leadToDelete.id);
+                setLeadToDelete(null);
+              }}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };
