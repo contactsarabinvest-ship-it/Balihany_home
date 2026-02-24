@@ -64,11 +64,6 @@ const DesignerProfile = () => {
     return fr;
   };
 
-  const budgetLabel = (level: string) => {
-    const key = `designers.budget.${level}` as const;
-    return t(key) as string;
-  };
-
   if (isLoading) {
     return (
       <main className="py-16">
@@ -128,7 +123,6 @@ const DesignerProfile = () => {
                   <MapPin className="h-4 w-4" />
                   {getLocal(designer.city_fr, designer.city_en, designer.city_ar)}
                 </p>
-                <Badge variant="outline" className="mt-2">{budgetLabel(designer.budget_level)}</Badge>
               </div>
             </div>
 

@@ -528,19 +528,6 @@ const ConciergeSignup = () => {
                 {profType === "designer" && (
                   <>
                     <div>
-                      <Label className="mb-2 block text-sm font-medium">{t("designers.budget") as string}</Label>
-                      <Select value={company.budgetLevel} onValueChange={(v) => setCompany(p => ({ ...p, budgetLevel: v }))}>
-                        <SelectTrigger className="rounded-lg">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="accessible">{t("designers.budget.accessible") as string}</SelectItem>
-                          <SelectItem value="mid-range">{t("designers.budget.mid-range") as string}</SelectItem>
-                          <SelectItem value="premium">{t("designers.budget.premium") as string}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
                       <Label className="mb-3 block text-sm font-medium">{t("form.styles") as string}</Label>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {DESIGNER_STYLES.map((s) => (

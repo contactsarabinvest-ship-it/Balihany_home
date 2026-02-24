@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe, ChevronDown, Shield, User } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Menu, X, Globe, ChevronDown, Shield, User, Search } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
+import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import type { Language } from "@/lib/translations";
 
 const langLabels: Record<Language, string> = { fr: "FR", en: "EN", ar: "عربي" };
@@ -12,10 +14,36 @@ const langFull: Record<Language, string> = { fr: "Français", en: "English", ar:
 
 const Header = () => {
   const { lang, setLang, t } = useLanguage();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+
+  const { concierge, menage, designers, isLoading, hasResults } = useGlobalSearch(searchQuery, { limit: 3 });
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setSearchOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearchSelect = (path: string) => {
+    navigate(path);
+    setSearchQuery("");
+    setSearchOpen(false);
+    setMobileOpen(false);
+  };
+
+  const getCity = (row: { city_fr?: string; city_en?: string; city_ar?: string }) =>
+    lang === "ar" ? (row.city_ar || row.city_fr) : lang === "en" ? row.city_en : row.city_fr;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -109,6 +137,92 @@ const Header = () => {
           ))}
         </nav>
 
+        <div className="hidden flex-1 max-w-xs mx-4 md:flex" ref={searchRef}>
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder={t("nav.searchPlaceholder") as string}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSearchOpen(e.target.value.trim().length >= 2);
+              }}
+              onFocus={() => searchQuery.trim().length >= 2 && setSearchOpen(true)}
+              className="pl-9 h-9 rounded-full bg-muted/50 border-border"
+            />
+            {searchOpen && searchQuery.trim().length >= 2 && (
+              <div className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-card shadow-lg z-50 max-h-[70vh] overflow-y-auto">
+                {isLoading ? (
+                  <div className="p-4 text-sm text-muted-foreground">{t("nav.searchPlaceholder") as string}...</div>
+                ) : !hasResults ? (
+                  <div className="p-4 text-sm text-muted-foreground">{t("search.noResults") as string}</div>
+                ) : (
+                  <div className="py-2">
+                    {concierge.length > 0 && (
+                      <div className="px-2 pb-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase px-2 py-1">{t("nav.concierge") as string}</p>
+                        {concierge.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted rounded-md flex flex-col"
+                            onClick={() => handleSearchSelect(`/concierge/${c.id}`)}
+                          >
+                            <span className="font-medium">{c.name}</span>
+                            {getCity(c) && <span className="text-xs text-muted-foreground">{getCity(c)}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {menage.length > 0 && (
+                      <div className="px-2 pb-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase px-2 py-1">{t("nav.menage") as string}</p>
+                        {menage.map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted rounded-md flex flex-col"
+                            onClick={() => handleSearchSelect(`/menage/${m.id}`)}
+                          >
+                            <span className="font-medium">{m.name}</span>
+                            {getCity(m) && <span className="text-xs text-muted-foreground">{getCity(m)}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {designers.length > 0 && (
+                      <div className="px-2 pb-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase px-2 py-1">{t("nav.designers") as string}</p>
+                        {designers.map((d) => (
+                          <button
+                            key={d.id}
+                            type="button"
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-muted rounded-md flex flex-col"
+                            onClick={() => handleSearchSelect(`/designers/${d.id}`)}
+                          >
+                            <span className="font-medium">{d.name}</span>
+                            {getCity(d) && <span className="text-xs text-muted-foreground">{getCity(d)}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="border-t border-border mt-2 pt-2">
+                      <button
+                        type="button"
+                        className="w-full text-left px-4 py-2 text-sm font-medium text-accent hover:bg-muted rounded-md"
+                        onClick={() => handleSearchSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
+                      >
+                        {t("search.seeAll") as string}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="hidden items-center gap-3 md:flex">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -183,6 +297,31 @@ const Header = () => {
       {mobileOpen && (
         <nav className="border-t border-border bg-card px-6 py-4 md:hidden">
           <div className="flex flex-col gap-4">
+            <div className="flex gap-2 mb-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder={t("nav.searchPlaceholder") as string}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && searchQuery.trim()) {
+                      handleSearchSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                    }
+                  }}
+                  className="pl-9 rounded-full bg-muted/50"
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                className="rounded-full shrink-0"
+                onClick={() => searchQuery.trim() && handleSearchSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
+              >
+                {t("search.seeAll") as string}
+              </Button>
+            </div>
             <Link
               to="/"
               onClick={() => setMobileOpen(false)}

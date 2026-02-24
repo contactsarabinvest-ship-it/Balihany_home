@@ -348,11 +348,6 @@ const Dashboard = () => {
     }
   }, [companies?.length, designers?.length, menageCompanies?.length]);
 
-  const budgetLabel = (level: string) => {
-    const key = `designers.budget.${level}` as "designers.budget.accessible" | "designers.budget.mid-range" | "designers.budget.premium";
-    return t(key) as string;
-  };
-
   const renderEditFormFields = (
     form: { name: string; city: string; description: string; logoUrl: string | null; portfolioUrls: string; portfolioPhotos: string; portfolioPhotoUrls: string[]; whatsapp: string },
     setForm: (fn: (prev: any) => any) => void,
@@ -649,19 +644,6 @@ const Dashboard = () => {
                     <div>
                       <Label className="mb-1.5 block text-sm">{t("form.styles") as string}</Label>
                       <Input value={designerForm.styles} onChange={(e) => setDesignerForm((f) => (f ? { ...f, styles: e.target.value } : f))} required placeholder="Modern, Minimalist, ..." className="rounded-lg" />
-                    </div>
-                    <div>
-                      <Label className="mb-1.5 block text-sm">{t("designers.budget") as string}</Label>
-                      <Select value={designerForm.budgetLevel} onValueChange={(v) => setDesignerForm((f) => (f ? { ...f, budgetLevel: v } : f))}>
-                        <SelectTrigger className="rounded-lg">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="accessible">{budgetLabel("accessible")}</SelectItem>
-                          <SelectItem value="mid-range">{budgetLabel("mid-range")}</SelectItem>
-                          <SelectItem value="premium">{budgetLabel("premium")}</SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
                     {renderSaveButtons()}
                   </form>

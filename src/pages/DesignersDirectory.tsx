@@ -16,7 +16,6 @@ import { useReviewStats } from "@/hooks/useReviewStats";
 const DesignersDirectory = () => {
   const { lang, t } = useLanguage();
   const [cityFilter, setCityFilter] = useState("all");
-  const [budgetFilter, setBudgetFilter] = useState("all");
 
   const { data: designers, isLoading } = useQuery({
     queryKey: ["designers-all"],
@@ -43,14 +42,8 @@ const DesignersDirectory = () => {
   const allCities = [...new Set(designers?.map(d => getCity(d)) || [])];
   const filtered = designers?.filter(d => {
     if (cityFilter !== "all" && getCity(d) !== cityFilter) return false;
-    if (budgetFilter !== "all" && d.budget_level !== budgetFilter) return false;
     return true;
   });
-
-  const budgetLabel = (level: string) => {
-    const key = `designers.budget.${level}` as any;
-    return t(key) as string;
-  };
 
   return (
     <main className="py-16 md:py-24">
@@ -73,17 +66,6 @@ const DesignersDirectory = () => {
               {allCities.map(city => (
                 <SelectItem key={city} value={city}>{city}</SelectItem>
               ))}
-            </SelectContent>
-          </Select>
-          <Select value={budgetFilter} onValueChange={setBudgetFilter}>
-            <SelectTrigger className="w-48 rounded-full">
-              <SelectValue placeholder={t("designers.filter.budget") as string} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("concierge.filter.all") as string}</SelectItem>
-              <SelectItem value="accessible">{budgetLabel("accessible")}</SelectItem>
-              <SelectItem value="mid-range">{budgetLabel("mid-range")}</SelectItem>
-              <SelectItem value="premium">{budgetLabel("premium")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -138,7 +120,6 @@ const DesignersDirectory = () => {
                         <Badge key={j} variant="secondary" className="text-xs">{s}</Badge>
                       ))}
                     </div>
-                    <Badge variant="outline" className="text-xs">{budgetLabel(d.budget_level)}</Badge>
                   </CardContent>
                   <CardFooter>
                     <Button asChild variant="outline" className="w-full gap-2 rounded-full">

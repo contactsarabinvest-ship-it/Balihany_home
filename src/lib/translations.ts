@@ -14,6 +14,12 @@ export const translations = {
   "nav.login": { fr: "Connexion", en: "Login", ar: "تسجيل الدخول" },
   "nav.logout": { fr: "Déconnexion", en: "Logout", ar: "تسجيل الخروج" },
   "nav.dashboard": { fr: "Mon espace", en: "Dashboard", ar: "لوحة التحكم" },
+  "nav.searchPlaceholder": { fr: "Rechercher...", en: "Search...", ar: "بحث..." },
+  "search.seeAll": { fr: "Voir tous les résultats", en: "See all results", ar: "عرض كل النتائج" },
+  "search.noResults": { fr: "Aucun résultat", en: "No results", ar: "لا توجد نتائج" },
+  "search.title": { fr: "Résultats de recherche", en: "Search results", ar: "نتائج البحث" },
+  "search.resultCount": { fr: "{count} résultat", en: "{count} result", ar: "{count} نتيجة" },
+  "search.resultCount_other": { fr: "{count} résultats", en: "{count} results", ar: "{count} نتائج" },
 
   // Hero
   "hero.title": {
