@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe, ChevronDown, Shield } from "lucide-react";
+import { Menu, X, Globe, ChevronDown, Shield, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import type { Language } from "@/lib/translations";
@@ -137,12 +137,31 @@ const Header = () => {
                   </Link>
                 </Button>
               )}
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/dashboard">{t("nav.dashboard") as string}</Link>
-              </Button>
-              <Button variant="outline" size="sm" className="rounded-full" onClick={handleLogout}>
-                {t("nav.logout") as string}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+                    <User className="h-4 w-4" />
+                    <span className="max-w-[140px] truncate">
+                      {(user.user_metadata?.display_name as string) || user.email}
+                    </span>
+                    <ChevronDown className="h-3 w-3 shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-2 border-b border-border">
+                    <p className="text-sm font-medium truncate">
+                      {(user.user_metadata?.display_name as string) || user.email}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard">{t("nav.dashboard") as string}</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    {t("nav.logout") as string}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
@@ -206,6 +225,12 @@ const Header = () => {
             ))}
             {user ? (
               <>
+                <div className="px-0 py-2 border-b border-border mb-2">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {(user.user_metadata?.display_name as string) || user.email}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
                 {isAdmin && (
                   <Link to="/admin" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Shield className="h-4 w-4" />

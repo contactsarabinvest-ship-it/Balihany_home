@@ -65,6 +65,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
+  const [userDisplay, setUserDisplay] = useState<string>("");
   const [editingType, setEditingType] = useState<"concierge" | "designer" | "menage" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [conciergeForm, setConciergeForm] = useState<ConciergeEditForm | null>(null);
@@ -75,7 +76,11 @@ const Dashboard = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) navigate("/login");
-      else setUserId(session.user.id);
+      else {
+        setUserId(session.user.id);
+        const name = (session.user.user_metadata?.display_name as string) || session.user.email || "";
+        setUserDisplay(name);
+      }
     });
   }, [navigate]);
 
@@ -430,9 +435,14 @@ const Dashboard = () => {
   return (
     <main className="py-16 md:py-24">
       <div className="container max-w-3xl">
-        <h1 className="mb-8 font-display text-3xl font-bold text-foreground">
+        <h1 className="mb-2 font-display text-3xl font-bold text-foreground">
           {t("nav.dashboard") as string}
         </h1>
+        {userDisplay && (
+          <p className="mb-8 text-muted-foreground">
+            {(t("dashboard.welcome") as string).replace("{name}", userDisplay)}
+          </p>
+        )}
 
         {(companies?.length === 0 && designers?.length === 0 && menageCompanies?.length === 0) && (
           <Card className="rounded-2xl border-dashed">

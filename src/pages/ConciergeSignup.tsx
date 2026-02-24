@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LogoUpload, PortfolioUpload } from "@/components/ImageUpload";
 import { z } from "zod";
-import { Building2, ChevronDown } from "lucide-react";
+import { Building2, ChevronDown, Mail } from "lucide-react";
 import { CityCombobox, CitiesCoveredCombobox } from "@/components/CityCombobox";
 import { MOROCCAN_CITIES, CONCIERGE_SERVICES, MENAGE_SERVICES, DESIGNER_STYLES, EXPERIENCE_RANGES } from "@/lib/signupData";
 
@@ -58,7 +58,7 @@ const ConciergeSignup = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const completeParam = searchParams.get("complete") === "1";
-  const [step, setStep] = useState(completeParam ? 2 : 1);
+  const [step, setStep] = useState<1 | "confirm" | 2>(1);
   const [loading, setLoading] = useState(false);
   const [profType, setProfType] = useState<"concierge" | "menage" | "designer">("concierge");
   const [premiumInterest, setPremiumInterest] = useState(false);
@@ -72,14 +72,34 @@ const ConciergeSignup = () => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [portfolioPhotoUrls, setPortfolioPhotoUrls] = useState<string[]>([]);
 
+  // When landing with ?complete=1 (after email confirmation) or on load: verify session + email status
   useEffect(() => {
-    if (!completeParam) return;
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session && completeParam) {
-        navigate("/login");
+    const checkSession = (session: { user: { email?: string; email_confirmed_at?: string } } | null) => {
+      if (!session) {
+        if (completeParam) navigate("/login");
+        return;
       }
+      const confirmed = !!(session.user as { email_confirmed_at?: string })?.email_confirmed_at;
+      if (completeParam) {
+        if (confirmed) setStep(2);
+        else {
+          setStep("confirm");
+          setAuth((p) => ({ ...p, email: session.user.email ?? p.email }));
+        }
+      } else if (!confirmed && step === 1) {
+        setStep("confirm");
+        setAuth((p) => ({ ...p, email: session.user.email ?? p.email }));
+      }
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => checkSession(session));
+
+    // Listen for auth changes (e.g. when token from URL hash is exchanged for session)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      checkSession(session);
     });
-  }, [completeParam, navigate]);
+    return () => subscription.unsubscribe();
+  }, [completeParam, navigate, step]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,11 +112,11 @@ const ConciergeSignup = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: auth.email,
       password: auth.password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/concierge-signup?complete=1`,
         data: { display_name: auth.displayName },
       },
     });
@@ -106,7 +126,21 @@ const ConciergeSignup = () => {
       return;
     }
     toast({ title: t("auth.signup.success") as string });
-    setStep(2);
+    // If email confirmation is required, show "check your email" screen; else go to step 2
+    const confirmed = !!(data.user as { email_confirmed_at?: string })?.email_confirmed_at;
+    setStep(confirmed ? 2 : "confirm");
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!auth.email) return;
+    setLoading(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email: auth.email });
+    setLoading(false);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: t("auth.confirmEmail.resendSuccess") as string });
   };
 
   const handleCompanySubmit = async (e: React.FormEvent) => {
@@ -126,6 +160,12 @@ const ConciergeSignup = () => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
+      toast({ title: t("auth.confirmEmailFirst") as string, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+    const emailConfirmed = !!(user as { email_confirmed_at?: string })?.email_confirmed_at;
+    if (!emailConfirmed) {
       toast({ title: t("auth.confirmEmailFirst") as string, variant: "destructive" });
       setLoading(false);
       return;
@@ -248,6 +288,38 @@ const ConciergeSignup = () => {
           <p className="mt-2 text-muted-foreground">{t("auth.signup.intro") as string}</p>
           <p className="mt-2 text-sm text-muted-foreground italic">{t("auth.signup.review") as string}</p>
         </div>
+
+        {step === "confirm" && (
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+                <Mail className="h-6 w-6 text-accent" />
+              </div>
+              <CardTitle className="text-lg text-center">{t("auth.confirmEmail.title") as string}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground text-center text-sm">
+                {(t("auth.confirmEmail.message") as string).replace("{email}", auth.email || "")}
+              </p>
+              <p className="text-muted-foreground text-center text-xs">
+                {t("auth.signup.review") as string}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-full"
+                disabled={loading}
+                onClick={handleResendConfirmation}
+              >
+                {loading ? "..." : t("auth.confirmEmail.resend") as string}
+              </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                {t("auth.login.hasAccount") as string}{" "}
+                <Link to="/login" className="text-accent hover:underline">{t("nav.login") as string}</Link>
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {step === 1 && (
           <Card className="rounded-2xl">
