@@ -291,7 +291,7 @@ const Header = () => {
           )}
         </div>
 
-        <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className="ml-auto md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
