@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Index from "./pages/Index";
@@ -38,25 +40,27 @@ const App = () => (
           <div className="flex min-h-screen flex-col">
             <Header />
             <div className="flex-1">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/concierge" element={<ConciergeDirectory />} />
-                <Route path="/concierge/:id" element={<ConciergeProfile />} />
-                <Route path="/menage" element={<MenageDirectory />} />
-                <Route path="/menage/:id" element={<MenageProfile />} />
-                <Route path="/designers" element={<DesignersDirectory />} />
-                <Route path="/designers/:id" element={<DesignerProfile />} />
-                <Route path="/calculator" element={<ProfitCalculator />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/concierge-signup" element={<ConciergeSignup />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <ErrorBoundary>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/concierge" element={<ConciergeDirectory />} />
+                  <Route path="/concierge/:id" element={<ConciergeProfile />} />
+                  <Route path="/menage" element={<MenageDirectory />} />
+                  <Route path="/menage/:id" element={<MenageProfile />} />
+                  <Route path="/designers" element={<DesignersDirectory />} />
+                  <Route path="/designers/:id" element={<DesignerProfile />} />
+                  <Route path="/calculator" element={<ProfitCalculator />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/concierge-signup" element={<ConciergeSignup />} />
+                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </ErrorBoundary>
             </div>
             <Footer />
           </div>
