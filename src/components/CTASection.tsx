@@ -20,7 +20,7 @@ const CTASection = () => {
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="gap-2 rounded-full px-8 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+            <Button asChild size="lg" variant="outline" className="gap-2 rounded-full px-8 bg-white border-white/30 text-foreground hover:bg-white/90">
               <Link to="/concierge-signup">
                 {t("cta.list") as string}
               </Link>
