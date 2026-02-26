@@ -67,7 +67,7 @@ const ConciergeSignup = () => {
   const [company, setCompany] = useState({
     name: "", city: "", description: "", budgetLevel: "mid-range",
     services: [] as string[], citiesCovered: [] as string[], styles: [] as string[],
-    experience: "", portfolioUrls: "", portfolioPhotos: "", whatsapp: "",
+    experience: "", portfolioUrls: "", portfolioPhotos: "", whatsapp: "", instagram: "",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [portfolioPhotoUrls, setPortfolioPhotoUrls] = useState<string[]>([]);
@@ -210,6 +210,7 @@ const ConciergeSignup = () => {
         portfolio_photos_pending: portfolioPhotosPending,
         experience_years: company.experience || null,
         whatsapp: company.whatsapp.trim() || null,
+        instagram: company.instagram.trim() || null,
         status: "pending",
         user_id: user.id,
       });
@@ -241,6 +242,7 @@ const ConciergeSignup = () => {
         portfolio_photos_pending: portfolioPhotosPending,
         experience_years: company.experience || null,
         whatsapp: company.whatsapp.trim() || null,
+        instagram: company.instagram.trim() || null,
         status: "pending",
         user_id: user.id,
       });
@@ -272,6 +274,7 @@ const ConciergeSignup = () => {
         budget_level: budgetLevel,
         experience_years: company.experience || null,
         whatsapp: company.whatsapp.trim() || null,
+        instagram: company.instagram.trim() || null,
         status: "pending",
         user_id: user.id,
       });
@@ -443,6 +446,13 @@ const ConciergeSignup = () => {
                   className="rounded-lg"
                 />
                 <p className="text-xs text-muted-foreground -mt-3">{t("form.whatsappHint") as string}</p>
+                <Input
+                  placeholder={t("form.instagram") as string}
+                  value={company.instagram}
+                  onChange={(e) => setCompany(p => ({ ...p, instagram: e.target.value }))}
+                  className="rounded-lg"
+                />
+                <p className="text-xs text-muted-foreground -mt-3">{t("form.instagramHint") as string}</p>
                 <div>
                   <Label className="mb-2 block text-sm font-medium">{t("form.city") as string}</Label>
                   <CityCombobox

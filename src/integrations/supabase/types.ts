@@ -64,6 +64,7 @@ export type Database = {
           description_fr: string
           experience_years: string | null
           id: string
+          instagram: string | null
           is_premium: boolean
           logo_url: string | null
           name: string
@@ -102,6 +103,7 @@ export type Database = {
           status?: string
           user_id?: string | null
           whatsapp?: string | null
+          instagram?: string | null
         }
         Update: {
           cities_covered_ar?: string[]
@@ -116,6 +118,7 @@ export type Database = {
           description_fr?: string
           experience_years?: string | null
           id?: string
+          instagram?: string | null
           is_premium?: boolean
           logo_url?: string | null
           name?: string
@@ -145,6 +148,7 @@ export type Database = {
           description_fr: string
           experience_years: string | null
           id: string
+          instagram: string | null
           is_premium: boolean
           logo_url: string | null
           name: string
@@ -183,6 +187,7 @@ export type Database = {
           status?: string
           user_id?: string | null
           whatsapp?: string | null
+          instagram?: string | null
         }
         Update: {
           cities_covered_ar?: string[]
@@ -197,6 +202,7 @@ export type Database = {
           description_fr?: string
           experience_years?: string | null
           id?: string
+          instagram?: string | null
           is_premium?: boolean
           logo_url?: string | null
           name?: string
@@ -293,6 +299,7 @@ export type Database = {
           description_en: string
           description_fr: string
           id: string
+          instagram: string | null
           is_premium: boolean
           logo_url: string | null
           name: string
@@ -329,6 +336,7 @@ export type Database = {
           styles_fr?: string[]
           user_id?: string | null
           whatsapp?: string | null
+          instagram?: string | null
         }
         Update: {
           budget_level?: string
@@ -353,6 +361,7 @@ export type Database = {
           styles_fr?: string[]
           user_id?: string | null
           whatsapp?: string | null
+          instagram?: string | null
         }
         Relationships: []
       }

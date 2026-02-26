@@ -31,6 +31,7 @@ type ConciergeEditForm = {
   portfolioPhotos: string;
   portfolioPhotoUrls: string[];
   whatsapp: string;
+  instagram: string;
 };
 
 type DesignerEditForm = {
@@ -44,6 +45,7 @@ type DesignerEditForm = {
   portfolioPhotos: string;
   portfolioPhotoUrls: string[];
   whatsapp: string;
+  instagram: string;
 };
 
 type MenageEditForm = {
@@ -57,6 +59,7 @@ type MenageEditForm = {
   portfolioPhotos: string;
   portfolioPhotoUrls: string[];
   whatsapp: string;
+  instagram: string;
 };
 
 const Dashboard = () => {
@@ -144,6 +147,7 @@ const Dashboard = () => {
       portfolioPhotos: "",
       portfolioPhotoUrls: pending,
       whatsapp: c.whatsapp ?? "",
+      instagram: c.instagram ?? "",
     });
     setDesignerForm(null);
     setMenageForm(null);
@@ -164,6 +168,7 @@ const Dashboard = () => {
       portfolioPhotos: "",
       portfolioPhotoUrls: pending,
       whatsapp: d.whatsapp ?? "",
+      instagram: d.instagram ?? "",
     });
     setConciergeForm(null);
     setMenageForm(null);
@@ -184,6 +189,7 @@ const Dashboard = () => {
       portfolioPhotos: "",
       portfolioPhotoUrls: pending,
       whatsapp: m.whatsapp ?? "",
+      instagram: m.instagram ?? "",
     });
     setConciergeForm(null);
     setDesignerForm(null);
@@ -228,6 +234,7 @@ const Dashboard = () => {
         portfolio_urls: portfolioUrlsArr,
         portfolio_photos_pending: portfolioPhotosPending,
         whatsapp: conciergeForm.whatsapp.trim() || null,
+        instagram: conciergeForm.instagram.trim() || null,
       })
       .eq("id", editingId);
 
@@ -270,6 +277,7 @@ const Dashboard = () => {
         portfolio_urls: portfolioUrlsArr,
         portfolio_photos_pending: portfolioPhotosPending,
         whatsapp: designerForm.whatsapp.trim() || null,
+        instagram: designerForm.instagram.trim() || null,
       })
       .eq("id", editingId);
 
@@ -315,6 +323,7 @@ const Dashboard = () => {
         portfolio_urls: portfolioUrlsArr,
         portfolio_photos_pending: portfolioPhotosPending,
         whatsapp: menageForm.whatsapp.trim() || null,
+        instagram: menageForm.instagram.trim() || null,
       })
       .eq("id", editingId);
 
@@ -349,7 +358,7 @@ const Dashboard = () => {
   }, [companies?.length, designers?.length, menageCompanies?.length]);
 
   const renderEditFormFields = (
-    form: { name: string; city: string; description: string; logoUrl: string | null; portfolioUrls: string; portfolioPhotos: string; portfolioPhotoUrls: string[]; whatsapp: string },
+    form: { name: string; city: string; description: string; logoUrl: string | null; portfolioUrls: string; portfolioPhotos: string; portfolioPhotoUrls: string[]; whatsapp: string; instagram: string },
     setForm: (fn: (prev: any) => any) => void,
     approvedPhotos: string[],
   ) => (
@@ -368,6 +377,16 @@ const Dashboard = () => {
           className="rounded-lg"
         />
         <p className="text-xs text-muted-foreground mt-1">{t("form.whatsappHint") as string}</p>
+      </div>
+      <div>
+        <Label className="mb-1.5 block text-sm">{t("form.instagram") as string}</Label>
+        <Input
+          placeholder="@username ou username"
+          value={form.instagram}
+          onChange={(e) => setForm((f: any) => (f ? { ...f, instagram: e.target.value } : f))}
+          className="rounded-lg"
+        />
+        <p className="text-xs text-muted-foreground mt-1">{t("form.instagramHint") as string}</p>
       </div>
       <div>
         <Label className="mb-1.5 block text-sm">{t("form.city") as string}</Label>
