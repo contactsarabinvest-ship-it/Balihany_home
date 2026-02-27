@@ -30,6 +30,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Search from "./pages/Search";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import PurchaseSuccess from "./pages/PurchaseSuccess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
                   <Route path="/search" element={<Search />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/purchase-success" element={<PurchaseSuccess />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </ErrorBoundary>

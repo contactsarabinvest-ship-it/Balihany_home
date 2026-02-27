@@ -200,7 +200,7 @@ const ConciergeProfile = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{company.name}</h1>
+              <h1 className="text-3xl font-bold tracking-tight uppercase">{company.name}</h1>
               {company.is_premium && (
                 <Badge className="bg-accent text-accent-foreground gap-1">
                   <Award className="h-3 w-3" />

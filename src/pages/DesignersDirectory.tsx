@@ -102,7 +102,7 @@ const DesignersDirectory = () => {
                         </Badge>
                       )}
                     </div>
-                    <CardTitle className="mt-3 text-lg">{d.name}</CardTitle>
+                    <CardTitle className="mt-3 text-lg uppercase">{d.name}</CardTitle>
                     <div className="flex items-center gap-3">
                       <p className="flex items-center gap-1 text-sm text-muted-foreground">
                         <MapPin className="h-3.5 w-3.5" />

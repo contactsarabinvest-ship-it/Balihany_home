@@ -197,7 +197,7 @@ const DesignerProfile = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{designer.name}</h1>
+              <h1 className="text-3xl font-bold tracking-tight uppercase">{designer.name}</h1>
               {designer.is_premium && (
                 <Badge className="bg-terracotta text-terracotta-foreground gap-1">
                   <Award className="h-3 w-3" />

@@ -443,6 +443,99 @@ export type Database = {
         }
         Relationships: []
       }
+      digital_products: {
+        Row: {
+          id: string
+          name_fr: string
+          name_en: string
+          name_ar: string
+          description_fr: string
+          description_en: string
+          description_ar: string
+          price_cents: number
+          currency: string
+          thumbnail_url: string | null
+          file_path: string
+          stripe_price_id: string | null
+          is_active: boolean
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name_fr: string
+          name_en: string
+          name_ar?: string
+          description_fr?: string
+          description_en?: string
+          description_ar?: string
+          price_cents: number
+          currency?: string
+          thumbnail_url?: string | null
+          file_path: string
+          stripe_price_id?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name_fr?: string
+          name_en?: string
+          name_ar?: string
+          description_fr?: string
+          description_en?: string
+          description_ar?: string
+          price_cents?: number
+          currency?: string
+          thumbnail_url?: string | null
+          file_path?: string
+          stripe_price_id?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          id: string
+          email: string
+          user_id: string | null
+          product_id: string
+          stripe_session_id: string | null
+          amount_cents: number
+          currency: string
+          download_token: string
+          downloaded_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          user_id?: string | null
+          product_id: string
+          stripe_session_id?: string | null
+          amount_cents: number
+          currency?: string
+          download_token?: string
+          downloaded_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          user_id?: string | null
+          product_id?: string
+          stripe_session_id?: string | null
+          amount_cents?: number
+          currency?: string
+          download_token?: string
+          downloaded_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

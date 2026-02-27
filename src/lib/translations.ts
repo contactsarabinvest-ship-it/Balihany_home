@@ -383,6 +383,40 @@ export const translations = {
   "userType.investorDesc": { fr: "Je cherche des prestataires pour gérer ou aménager mon bien.", en: "I'm looking for service providers to manage or furnish my property.", ar: "أبحث عن مزودي خدمات لإدارة أو تأثيث ممتلكاتي." },
   "userType.professional": { fr: "Professionnel", en: "Professional", ar: "محترف" },
   "userType.professionalDesc": { fr: "Je propose des services de conciergerie, ménage ou design.", en: "I offer concierge, cleaning or design services.", ar: "أقدم خدمات الكونسيرج أو التنظيف أو التصميم." },
+
+  // Digital products shop
+  "shop.title": { fr: "Nos outils pour investisseurs", en: "Our Tools for Investors", ar: "أدواتنا للمستثمرين" },
+  "shop.subtitle": { fr: "Des templates prêts à l'emploi pour optimiser votre investissement locatif au Maroc.", en: "Ready-to-use templates to optimize your rental investment in Morocco.", ar: "قوالب جاهزة للاستخدام لتحسين استثمارك في الإيجار بالمغرب." },
+  "shop.buy": { fr: "Acheter", en: "Buy Now", ar: "اشترِ الآن" },
+  "shop.buyLoading": { fr: "Redirection...", en: "Redirecting...", ar: "جاري التحويل..." },
+  "shop.emailRequired": { fr: "Entrez votre email pour continuer", en: "Enter your email to continue", ar: "أدخل بريدك الإلكتروني للمتابعة" },
+  "shop.free": { fr: "Gratuit", en: "Free", ar: "مجاني" },
+
+  // Purchase success
+  "purchase.title": { fr: "Merci pour votre achat !", en: "Thank you for your purchase!", ar: "شكرًا لشرائك!" },
+  "purchase.subtitle": { fr: "Votre paiement a été confirmé. Téléchargez votre fichier ci-dessous.", en: "Your payment has been confirmed. Download your file below.", ar: "تم تأكيد الدفع. قم بتنزيل ملفك أدناه." },
+  "purchase.download": { fr: "Télécharger", en: "Download", ar: "تحميل" },
+  "purchase.loading": { fr: "Vérification de votre achat...", en: "Verifying your purchase...", ar: "جاري التحقق من عملية الشراء..." },
+  "purchase.error": { fr: "Achat introuvable. Vérifiez votre email ou contactez-nous.", en: "Purchase not found. Check your email or contact us.", ar: "لم يتم العثور على عملية الشراء. تحقق من بريدك أو اتصل بنا." },
+  "purchase.backCalc": { fr: "Retour au calculateur", en: "Back to calculator", ar: "العودة إلى الحاسبة" },
+
+  // Admin products
+  "admin.products": { fr: "Produits", en: "Products", ar: "المنتجات" },
+  "admin.addProduct": { fr: "Ajouter un produit", en: "Add product", ar: "إضافة منتج" },
+  "admin.editProduct": { fr: "Modifier", en: "Edit", ar: "تعديل" },
+  "admin.productName": { fr: "Nom du produit", en: "Product name", ar: "اسم المنتج" },
+  "admin.productDesc": { fr: "Description", en: "Description", ar: "الوصف" },
+  "admin.productPrice": { fr: "Prix (centimes)", en: "Price (cents)", ar: "السعر (سنتات)" },
+  "admin.productFile": { fr: "Fichier (chemin storage)", en: "File (storage path)", ar: "الملف (مسار التخزين)" },
+  "admin.productThumbnail": { fr: "URL miniature", en: "Thumbnail URL", ar: "رابط الصورة المصغرة" },
+  "admin.productActive": { fr: "Actif", en: "Active", ar: "نشط" },
+  "admin.productInactive": { fr: "Inactif", en: "Inactive", ar: "غير نشط" },
+  "admin.productSales": { fr: "ventes", en: "sales", ar: "مبيعات" },
+  "admin.recentPurchases": { fr: "Achats récents", en: "Recent purchases", ar: "المشتريات الأخيرة" },
+  "admin.noPurchases": { fr: "Aucun achat pour le moment.", en: "No purchases yet.", ar: "لا توجد مشتريات بعد." },
+  "admin.noProducts": { fr: "Aucun produit. Ajoutez votre premier produit.", en: "No products. Add your first product.", ar: "لا توجد منتجات. أضف منتجك الأول." },
+  "admin.saveProduct": { fr: "Enregistrer", en: "Save", ar: "حفظ" },
+  "admin.cancel": { fr: "Annuler", en: "Cancel", ar: "إلغاء" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

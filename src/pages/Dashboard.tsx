@@ -96,6 +96,17 @@ const Dashboard = () => {
     });
   }, [navigate]);
 
+  const { data: userProfile } = useQuery({
+    queryKey: ["user-profile-type", userId],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("user_type").eq("user_id", userId!).maybeSingle();
+      return data;
+    },
+    enabled: !!userId,
+  });
+
+  const isProfessional = userProfile?.user_type !== "investor";
+
   const { data: companies } = useQuery({
     queryKey: ["my-companies", userId],
     queryFn: async () => {
@@ -572,7 +583,7 @@ const Dashboard = () => {
           </p>
         )}
 
-        {(companies?.length === 0 && designers?.length === 0 && menageCompanies?.length === 0) && (
+        {isProfessional && (companies?.length === 0 && designers?.length === 0 && menageCompanies?.length === 0) && (
           <Card className="rounded-2xl border-dashed">
             <CardContent className="flex flex-col items-center justify-center gap-4 py-12 text-center">
               <p className="max-w-md text-muted-foreground">{t("dashboard.noProfile") as string}</p>
@@ -583,7 +594,7 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {companies && companies.length > 0 && (
+        {isProfessional && companies && companies.length > 0 && (
           <div className="mb-8">
             <h2 className="mb-4 text-lg font-semibold text-foreground">{t("signup.type.concierge") as string}</h2>
             <div className="space-y-4">
@@ -654,7 +665,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {menageCompanies && menageCompanies.length > 0 && (
+        {isProfessional && menageCompanies && menageCompanies.length > 0 && (
           <div className="mb-8">
             <h2 className="mb-4 text-lg font-semibold text-foreground">{t("signup.type.menage") as string}</h2>
             <div className="space-y-4">
@@ -725,7 +736,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {designers && designers.length > 0 && (
+        {isProfessional && designers && designers.length > 0 && (
           <div className="mb-8">
             <h2 className="mb-4 text-lg font-semibold text-foreground">{t("signup.type.designer") as string}</h2>
             <div className="space-y-4">

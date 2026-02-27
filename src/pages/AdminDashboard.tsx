@@ -19,7 +19,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Sparkles, Mail, Calculator, Star, MessageSquare, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Sparkles, Mail, Calculator, Star, MessageSquare, Trash2, ShoppingBag, Plus, Pencil, ToggleLeft, ToggleRight } from "lucide-react";
 
 const AdminDashboard = () => {
   const { t } = useLanguage();
@@ -30,6 +33,13 @@ const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [processing, setProcessing] = useState<string | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<{ type: "contact" | "calculator"; id: string } | null>(null);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [seenCounts, setSeenCounts] = useState<Record<string, number>>(() => {
+    try {
+      const stored = localStorage.getItem("admin-seen-counts");
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -169,6 +179,125 @@ const AdminDashboard = () => {
     },
     enabled: !!userId && isAdmin === true,
   });
+
+  const { data: adminProducts, refetch: refetchProducts } = useQuery({
+    queryKey: ["admin-products", userId, isAdmin],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("digital_products")
+        .select("*")
+        .order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId && isAdmin === true,
+  });
+
+  const { data: adminPurchases } = useQuery({
+    queryKey: ["admin-purchases", userId, isAdmin],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("*, digital_products(name_fr)")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId && isAdmin === true,
+  });
+
+  const [productForm, setProductForm] = useState<{
+    id?: string;
+    name_fr: string; name_en: string; name_ar: string;
+    description_fr: string; description_en: string; description_ar: string;
+    price_cents: string; currency: string;
+    thumbnail_url: string; file_path: string;
+    is_active: boolean; sort_order: string;
+  } | null>(null);
+
+  const openNewProduct = () => setProductForm({
+    name_fr: "", name_en: "", name_ar: "",
+    description_fr: "", description_en: "", description_ar: "",
+    price_cents: "", currency: "EUR",
+    thumbnail_url: "", file_path: "",
+    is_active: true, sort_order: "0",
+  });
+
+  const openEditProduct = (p: any) => setProductForm({
+    id: p.id,
+    name_fr: p.name_fr, name_en: p.name_en, name_ar: p.name_ar,
+    description_fr: p.description_fr, description_en: p.description_en, description_ar: p.description_ar,
+    price_cents: String(p.price_cents), currency: p.currency,
+    thumbnail_url: p.thumbnail_url || "", file_path: p.file_path,
+    is_active: p.is_active, sort_order: String(p.sort_order),
+  });
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productForm) return;
+    setProcessing("product-save");
+    const payload = {
+      name_fr: productForm.name_fr,
+      name_en: productForm.name_en,
+      name_ar: productForm.name_ar,
+      description_fr: productForm.description_fr,
+      description_en: productForm.description_en,
+      description_ar: productForm.description_ar,
+      price_cents: parseInt(productForm.price_cents) || 0,
+      currency: productForm.currency || "EUR",
+      thumbnail_url: productForm.thumbnail_url || null,
+      file_path: productForm.file_path,
+      is_active: productForm.is_active,
+      sort_order: parseInt(productForm.sort_order) || 0,
+    };
+    let error;
+    if (productForm.id) {
+      ({ error } = await supabase.from("digital_products").update(payload).eq("id", productForm.id));
+    } else {
+      ({ error } = await supabase.from("digital_products").insert(payload));
+    }
+    setProcessing(null);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: productForm.id ? "Product updated" : "Product created" });
+    setProductForm(null);
+    refetchProducts();
+    queryClient.invalidateQueries({ queryKey: ["admin-purchases"] });
+  };
+
+  const toggleProductActive = async (id: string, current: boolean) => {
+    setProcessing(`toggle-${id}`);
+    const { error } = await supabase.from("digital_products").update({ is_active: !current }).eq("id", id);
+    setProcessing(null);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    refetchProducts();
+  };
+
+  const deleteProduct = async (id: string) => {
+    const sales = purchaseCountForProduct(id);
+    if (sales > 0) {
+      toast({ title: `Ce produit a ${sales} achat(s). Désactivez-le plutôt que de le supprimer.`, variant: "destructive" });
+      return;
+    }
+    setProcessing(`del-product-${id}`);
+    const { error } = await supabase.from("digital_products").delete().eq("id", id);
+    setProcessing(null);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Produit supprimé" });
+    refetchProducts();
+  };
+
+  const purchaseCountForProduct = (productId: string) =>
+    adminPurchases?.filter((p) => p.product_id === productId).length ?? 0;
 
   const approveReview = async (reviewId: string) => {
     setProcessing(reviewId);
@@ -346,6 +475,26 @@ const AdminDashboard = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-calculator-leads"] });
   };
 
+  const tabCounts: Record<string, number> = {
+    inscriptions: allSubmissions?.length ?? 0,
+    companies: (pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0) + (pendingMenage?.length ?? 0),
+    photos: itemsWithPendingPhotos?.length ?? 0,
+    reviews: pendingReviews?.length ?? 0,
+    products: adminProducts?.length ?? 0,
+    leads: (contactLeads?.length ?? 0) + (calculatorLeads?.length ?? 0),
+  };
+
+  const hasNew = (tab: string) => {
+    const current = tabCounts[tab] ?? 0;
+    return current > 0 && current > (seenCounts[tab] ?? 0);
+  };
+
+  const handleTabChange = (tab: string) => {
+    const updated = { ...seenCounts, [tab]: tabCounts[tab] ?? 0 };
+    setSeenCounts(updated);
+    localStorage.setItem("admin-seen-counts", JSON.stringify(updated));
+  };
+
   if (isAdmin === null) {
     return (
       <main className="py-16">
@@ -377,45 +526,53 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="inscriptions" className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-5">
+        <Tabs defaultValue="inscriptions" className="space-y-6" onValueChange={handleTabChange}>
+          <TabsList className="grid w-full max-w-4xl grid-cols-6">
             <TabsTrigger value="inscriptions">
               Inscriptions
-              {(allSubmissions?.length ?? 0) > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {allSubmissions?.length}
+              {tabCounts.inscriptions > 0 && (
+                <Badge variant="secondary" className={`ml-2 ${hasNew("inscriptions") ? "bg-green-500 text-white" : ""}`}>
+                  {tabCounts.inscriptions}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="companies">
               En attente
-              {(pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0) + (pendingMenage?.length ?? 0) > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {(pendingCompanies?.length ?? 0) + (pendingDesigners?.length ?? 0) + (pendingMenage?.length ?? 0)}
+              {tabCounts.companies > 0 && (
+                <Badge variant="secondary" className={`ml-2 ${hasNew("companies") ? "bg-green-500 text-white" : ""}`}>
+                  {tabCounts.companies}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="photos">
               Photos
-              {(itemsWithPendingPhotos?.length ?? 0) > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {itemsWithPendingPhotos?.length}
+              {tabCounts.photos > 0 && (
+                <Badge variant="secondary" className={`ml-2 ${hasNew("photos") ? "bg-green-500 text-white" : ""}`}>
+                  {tabCounts.photos}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="reviews">
               Avis
-              {(pendingReviews?.length ?? 0) > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {pendingReviews?.length}
+              {tabCounts.reviews > 0 && (
+                <Badge variant="secondary" className={`ml-2 ${hasNew("reviews") ? "bg-green-500 text-white" : ""}`}>
+                  {tabCounts.reviews}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="products">
+              Produits
+              {tabCounts.products > 0 && (
+                <Badge variant="secondary" className={`ml-2 ${hasNew("products") ? "bg-green-500 text-white" : ""}`}>
+                  {tabCounts.products}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="leads">
               Leads
-              {((contactLeads?.length ?? 0) + (calculatorLeads?.length ?? 0)) > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {(contactLeads?.length ?? 0) + (calculatorLeads?.length ?? 0)}
+              {tabCounts.leads > 0 && (
+                <Badge variant="secondary" className={`ml-2 ${hasNew("leads") ? "bg-green-500 text-white" : ""}`}>
+                  {tabCounts.leads}
                 </Badge>
               )}
             </TabsTrigger>
@@ -823,6 +980,200 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="products" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Gérez vos produits digitaux (templates, guides, etc.)
+              </p>
+              <Button size="sm" className="gap-1.5 rounded-full" onClick={openNewProduct}>
+                <Plus className="h-4 w-4" />
+                Ajouter
+              </Button>
+            </div>
+
+            {productForm && (
+              <Card className="rounded-xl border-accent/30">
+                <CardContent className="py-4">
+                  <form onSubmit={handleSaveProduct} className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div>
+                        <Label className="text-xs">Nom FR</Label>
+                        <Input value={productForm.name_fr} onChange={(e) => setProductForm((f) => f ? { ...f, name_fr: e.target.value } : f)} required className="rounded-lg h-9" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Nom EN</Label>
+                        <Input value={productForm.name_en} onChange={(e) => setProductForm((f) => f ? { ...f, name_en: e.target.value } : f)} required className="rounded-lg h-9" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Nom AR</Label>
+                        <Input value={productForm.name_ar} onChange={(e) => setProductForm((f) => f ? { ...f, name_ar: e.target.value } : f)} className="rounded-lg h-9" />
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div>
+                        <Label className="text-xs">Description FR</Label>
+                        <Textarea value={productForm.description_fr} onChange={(e) => setProductForm((f) => f ? { ...f, description_fr: e.target.value } : f)} rows={2} className="rounded-lg text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Description EN</Label>
+                        <Textarea value={productForm.description_en} onChange={(e) => setProductForm((f) => f ? { ...f, description_en: e.target.value } : f)} rows={2} className="rounded-lg text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Description AR</Label>
+                        <Textarea value={productForm.description_ar} onChange={(e) => setProductForm((f) => f ? { ...f, description_ar: e.target.value } : f)} rows={2} className="rounded-lg text-sm" />
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div>
+                        <Label className="text-xs">Prix (centimes)</Label>
+                        <Input type="number" min="0" value={productForm.price_cents} onChange={(e) => setProductForm((f) => f ? { ...f, price_cents: e.target.value } : f)} required className="rounded-lg h-9" placeholder="2900 = 29 EUR" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Devise</Label>
+                        <Input value={productForm.currency} onChange={(e) => setProductForm((f) => f ? { ...f, currency: e.target.value } : f)} className="rounded-lg h-9" placeholder="EUR" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Ordre d'affichage</Label>
+                        <Input type="number" value={productForm.sort_order} onChange={(e) => setProductForm((f) => f ? { ...f, sort_order: e.target.value } : f)} className="rounded-lg h-9" />
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <Label className="text-xs">URL miniature</Label>
+                        <Input value={productForm.thumbnail_url} onChange={(e) => setProductForm((f) => f ? { ...f, thumbnail_url: e.target.value } : f)} className="rounded-lg h-9" placeholder="https://..." />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Chemin fichier (bucket digital-products)</Label>
+                        <Input value={productForm.file_path} onChange={(e) => setProductForm((f) => f ? { ...f, file_path: e.target.value } : f)} required className="rounded-lg h-9" placeholder="templates/mon-template.xlsx" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-2">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="checkbox" checked={productForm.is_active} onChange={(e) => setProductForm((f) => f ? { ...f, is_active: e.target.checked } : f)} className="rounded" />
+                        Actif
+                      </label>
+                      <div className="flex gap-2">
+                        <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => setProductForm(null)}>
+                          Annuler
+                        </Button>
+                        <Button type="submit" size="sm" className="rounded-full gap-1.5" disabled={processing === "product-save"}>
+                          <Check className="h-4 w-4" />
+                          {productForm.id ? "Modifier" : "Créer"}
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            {!adminProducts?.length && !productForm ? (
+              <Card className="rounded-2xl">
+                <CardContent className="py-12 text-center">
+                  <ShoppingBag className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <p className="text-muted-foreground">Aucun produit. Ajoutez votre premier produit.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {adminProducts?.map((p) => (
+                  <Card key={p.id} className="rounded-xl">
+                    <CardContent className="py-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                          {p.thumbnail_url ? (
+                            <img src={p.thumbnail_url} alt={p.name_fr} className="h-12 w-12 rounded-lg object-cover shrink-0" />
+                          ) : (
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+                              <ShoppingBag className="h-6 w-6 text-accent" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium">{p.name_fr}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {(p.price_cents / 100).toFixed(p.price_cents % 100 === 0 ? 0 : 2)} {p.currency.toUpperCase()}
+                              <span className="mx-2 text-muted-foreground/40">·</span>
+                              {purchaseCountForProduct(p.id)} ventes
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={p.is_active ? "default" : "secondary"}>
+                            {p.is_active ? "Actif" : "Inactif"}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 rounded-full"
+                            onClick={() => toggleProductActive(p.id, p.is_active)}
+                            disabled={!!processing}
+                            title={p.is_active ? "Désactiver" : "Activer"}
+                          >
+                            {p.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 rounded-full"
+                            onClick={() => openEditProduct(p)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Modifier
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 rounded-full text-destructive hover:bg-destructive/10"
+                            onClick={() => setProductToDelete(p.id)}
+                            disabled={!!processing}
+                            title="Supprimer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Recent purchases */}
+            <div className="mt-6">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                Achats récents
+              </h3>
+              {!adminPurchases?.length ? (
+                <Card className="rounded-xl">
+                  <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                    Aucun achat pour le moment.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {adminPurchases.map((purchase) => (
+                    <Card key={purchase.id} className="rounded-xl">
+                      <CardContent className="py-3">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <a href={`mailto:${purchase.email}`} className="text-sm font-medium text-accent hover:underline">{purchase.email}</a>
+                            <p className="text-xs text-muted-foreground">
+                              {(purchase as any).digital_products?.name_fr || "—"}
+                              <span className="mx-2 text-muted-foreground/40">·</span>
+                              {(purchase.amount_cents / 100).toFixed(2)} {purchase.currency.toUpperCase()}
+                            </p>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{formatDate(purchase.created_at)}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
           <TabsContent value="leads" className="space-y-6">
             <div>
               <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
@@ -944,6 +1295,30 @@ const AdminDashboard = () => {
                 if (leadToDelete.type === "contact") await deleteContactLead(leadToDelete.id);
                 else await deleteCalculatorLead(leadToDelete.id);
                 setLeadToDelete(null);
+              }}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voulez-vous vraiment supprimer ce produit digital ? Les achats existants seront conservés mais le produit ne sera plus disponible. Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!productToDelete) return;
+                await deleteProduct(productToDelete);
+                setProductToDelete(null);
               }}
             >
               Supprimer
