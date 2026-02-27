@@ -68,6 +68,7 @@ const ConciergeSignup = () => {
     name: "", city: "", description: "", budgetLevel: "mid-range",
     services: [] as string[], citiesCovered: [] as string[], styles: [] as string[],
     experience: "", portfolioUrls: "", portfolioPhotos: "", whatsapp: "", instagram: "",
+    website: "", phone: "", credentials: "",
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [portfolioPhotoUrls, setPortfolioPhotoUrls] = useState<string[]>([]);
@@ -211,6 +212,9 @@ const ConciergeSignup = () => {
         experience_years: company.experience || null,
         whatsapp: company.whatsapp.trim() || null,
         instagram: company.instagram.trim() || null,
+        website: company.website.trim() || null,
+        phone: company.phone.trim() || null,
+        credentials: company.credentials.split(",").map(s => s.trim()).filter(Boolean).length > 0 ? company.credentials.split(",").map(s => s.trim()).filter(Boolean) : null,
         status: "pending",
         user_id: user.id,
       });
@@ -243,6 +247,9 @@ const ConciergeSignup = () => {
         experience_years: company.experience || null,
         whatsapp: company.whatsapp.trim() || null,
         instagram: company.instagram.trim() || null,
+        website: company.website.trim() || null,
+        phone: company.phone.trim() || null,
+        credentials: company.credentials.split(",").map(s => s.trim()).filter(Boolean).length > 0 ? company.credentials.split(",").map(s => s.trim()).filter(Boolean) : null,
         status: "pending",
         user_id: user.id,
       });
@@ -275,6 +282,9 @@ const ConciergeSignup = () => {
         experience_years: company.experience || null,
         whatsapp: company.whatsapp.trim() || null,
         instagram: company.instagram.trim() || null,
+        website: company.website.trim() || null,
+        phone: company.phone.trim() || null,
+        credentials: company.credentials.split(",").map(s => s.trim()).filter(Boolean).length > 0 ? company.credentials.split(",").map(s => s.trim()).filter(Boolean) : null,
         status: "pending",
         user_id: user.id,
       });
@@ -453,6 +463,28 @@ const ConciergeSignup = () => {
                   className="rounded-lg"
                 />
                 <p className="text-xs text-muted-foreground -mt-3">{t("form.instagramHint") as string}</p>
+                <Input
+                  placeholder={t("form.website") as string}
+                  value={company.website}
+                  onChange={(e) => setCompany(p => ({ ...p, website: e.target.value }))}
+                  className="rounded-lg"
+                />
+                <p className="text-xs text-muted-foreground -mt-3">{t("form.websiteHint") as string}</p>
+                <Input
+                  type="tel"
+                  placeholder={t("form.businessPhone") as string}
+                  value={company.phone}
+                  onChange={(e) => setCompany(p => ({ ...p, phone: e.target.value }))}
+                  className="rounded-lg"
+                />
+                <p className="text-xs text-muted-foreground -mt-3">{t("form.businessPhoneHint") as string}</p>
+                <Input
+                  placeholder={t("form.credentials") as string}
+                  value={company.credentials}
+                  onChange={(e) => setCompany(p => ({ ...p, credentials: e.target.value }))}
+                  className="rounded-lg"
+                />
+                <p className="text-xs text-muted-foreground -mt-3">{t("form.credentialsHint") as string}</p>
                 <div>
                   <Label className="mb-2 block text-sm font-medium">{t("form.city") as string}</Label>
                   <CityCombobox

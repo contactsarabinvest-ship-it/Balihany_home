@@ -59,6 +59,7 @@ export type Database = {
           city_en: string
           city_fr: string
           created_at: string
+          credentials: string[] | null
           description_ar: string
           description_en: string
           description_fr: string
@@ -68,6 +69,7 @@ export type Database = {
           is_premium: boolean
           logo_url: string | null
           name: string
+          phone: string | null
           portfolio_photos: string[]
           portfolio_photos_pending: string[]
           portfolio_urls: string[]
@@ -76,6 +78,7 @@ export type Database = {
           services_fr: string[]
           status: string
           user_id: string | null
+          website: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -85,6 +88,7 @@ export type Database = {
           city_ar?: string
           city_en: string
           city_fr: string
+          credentials?: string[] | null
           experience_years?: string | null
           created_at?: string
           description_ar?: string
@@ -94,6 +98,7 @@ export type Database = {
           is_premium?: boolean
           logo_url?: string | null
           name: string
+          phone?: string | null
           portfolio_photos?: string[]
           portfolio_photos_pending?: string[]
           portfolio_urls?: string[]
@@ -102,6 +107,7 @@ export type Database = {
           services_fr?: string[]
           status?: string
           user_id?: string | null
+          website?: string | null
           whatsapp?: string | null
           instagram?: string | null
         }
@@ -113,6 +119,7 @@ export type Database = {
           city_en?: string
           city_fr?: string
           created_at?: string
+          credentials?: string[] | null
           description_ar?: string
           description_en?: string
           description_fr?: string
@@ -122,6 +129,7 @@ export type Database = {
           is_premium?: boolean
           logo_url?: string | null
           name?: string
+          phone?: string | null
           portfolio_photos?: string[]
           portfolio_photos_pending?: string[]
           portfolio_urls?: string[]
@@ -130,6 +138,7 @@ export type Database = {
           services_fr?: string[]
           status?: string
           user_id?: string | null
+          website?: string | null
           whatsapp?: string | null
         }
         Relationships: []
@@ -143,6 +152,7 @@ export type Database = {
           city_en: string
           city_fr: string
           created_at: string
+          credentials: string[] | null
           description_ar: string
           description_en: string
           description_fr: string
@@ -152,6 +162,7 @@ export type Database = {
           is_premium: boolean
           logo_url: string | null
           name: string
+          phone: string | null
           portfolio_photos: string[]
           portfolio_photos_pending: string[]
           portfolio_urls: string[]
@@ -160,6 +171,7 @@ export type Database = {
           services_fr: string[]
           status: string
           user_id: string | null
+          website: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -169,6 +181,7 @@ export type Database = {
           city_ar?: string
           city_en: string
           city_fr: string
+          credentials?: string[] | null
           experience_years?: string | null
           created_at?: string
           description_ar?: string
@@ -178,6 +191,7 @@ export type Database = {
           is_premium?: boolean
           logo_url?: string | null
           name: string
+          phone?: string | null
           portfolio_photos?: string[]
           portfolio_photos_pending?: string[]
           portfolio_urls?: string[]
@@ -186,6 +200,7 @@ export type Database = {
           services_fr?: string[]
           status?: string
           user_id?: string | null
+          website?: string | null
           whatsapp?: string | null
           instagram?: string | null
         }
@@ -197,6 +212,7 @@ export type Database = {
           city_en?: string
           city_fr?: string
           created_at?: string
+          credentials?: string[] | null
           description_ar?: string
           description_en?: string
           description_fr?: string
@@ -206,6 +222,7 @@ export type Database = {
           is_premium?: boolean
           logo_url?: string | null
           name?: string
+          phone?: string | null
           portfolio_photos?: string[]
           portfolio_photos_pending?: string[]
           portfolio_urls?: string[]
@@ -214,6 +231,7 @@ export type Database = {
           services_fr?: string[]
           status?: string
           user_id?: string | null
+          website?: string | null
           whatsapp?: string | null
         }
         Relationships: []
@@ -294,6 +312,7 @@ export type Database = {
           city_en: string
           city_fr: string
           created_at: string
+          credentials: string[] | null
           experience_years: string | null
           description_ar: string
           description_en: string
@@ -303,6 +322,7 @@ export type Database = {
           is_premium: boolean
           logo_url: string | null
           name: string
+          phone: string | null
           portfolio_photos: string[]
           portfolio_photos_pending: string[]
           portfolio_urls: string[]
@@ -311,6 +331,7 @@ export type Database = {
           styles_en: string[]
           styles_fr: string[]
           user_id: string | null
+          website: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -319,6 +340,7 @@ export type Database = {
           city_en: string
           city_fr: string
           created_at?: string
+          credentials?: string[] | null
           experience_years?: string | null
           description_ar?: string
           description_en: string
@@ -327,6 +349,7 @@ export type Database = {
           is_premium?: boolean
           logo_url?: string | null
           name: string
+          phone?: string | null
           portfolio_photos?: string[]
           portfolio_photos_pending?: string[]
           portfolio_urls?: string[]
@@ -335,6 +358,7 @@ export type Database = {
           styles_en?: string[]
           styles_fr?: string[]
           user_id?: string | null
+          website?: string | null
           whatsapp?: string | null
           instagram?: string | null
         }
@@ -344,6 +368,7 @@ export type Database = {
           city_en?: string
           city_fr?: string
           created_at?: string
+          credentials?: string[] | null
           description_ar?: string
           description_en?: string
           description_fr?: string
@@ -352,6 +377,7 @@ export type Database = {
           is_premium?: boolean
           logo_url?: string | null
           name?: string
+          phone?: string | null
           portfolio_photos?: string[]
           portfolio_photos_pending?: string[]
           portfolio_urls?: string[]
@@ -360,6 +386,7 @@ export type Database = {
           styles_en?: string[]
           styles_fr?: string[]
           user_id?: string | null
+          website?: string | null
           whatsapp?: string | null
           instagram?: string | null
         }
@@ -372,6 +399,7 @@ export type Database = {
           email: string | null
           id: string
           user_id: string
+          user_type: string | null
         }
         Insert: {
           created_at?: string
@@ -379,6 +407,7 @@ export type Database = {
           email?: string | null
           id?: string
           user_id: string
+          user_type?: string | null
         }
         Update: {
           created_at?: string
@@ -386,6 +415,31 @@ export type Database = {
           email?: string | null
           id?: string
           user_id?: string
+          user_type?: string | null
+        }
+        Relationships: []
+      }
+      saved_profiles: {
+        Row: {
+          id: string
+          user_id: string
+          profile_type: string
+          profile_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          profile_type: string
+          profile_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          profile_type?: string
+          profile_id?: string
+          created_at?: string
         }
         Relationships: []
       }

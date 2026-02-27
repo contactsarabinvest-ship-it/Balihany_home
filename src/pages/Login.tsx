@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ const Login = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
 
@@ -27,14 +29,15 @@ const Login = () => {
       toast({ title: error.message, variant: "destructive" });
       return;
     }
-    navigate("/dashboard");
+    navigate(redirectTo);
   };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+    const dest = redirectTo.startsWith("/") ? `${window.location.origin}${redirectTo}` : redirectTo;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: dest },
     });
     setLoading(false);
     if (error) {

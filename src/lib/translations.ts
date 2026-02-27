@@ -338,6 +338,51 @@ export const translations = {
   "upload.loginRequired": { fr: "Connectez-vous pour télécharger des images.", en: "You must be logged in to upload images.", ar: "يجب تسجيل الدخول لتحميل الصور." },
   "upload.confirmEmailFirst": { fr: "Veuillez d'abord confirmer votre email (vérifiez votre boîte de réception).", en: "Please confirm your email first (check your inbox).", ar: "يرجى تأكيد بريدك الإلكتروني أولاً (تحقق من صندوق الوارد)." },
   "upload.failed": { fr: "Échec du téléchargement. Réessayez ou contactez le support.", en: "Upload failed. Try again or contact support.", ar: "فشل التحميل. حاول مرة أخرى أو اتصل بالدعم." },
+
+  // Profile tabs
+  "profile.tab.about": { fr: "À propos", en: "About", ar: "حول" },
+  "profile.tab.services": { fr: "Services", en: "Services", ar: "الخدمات" },
+  "profile.tab.styles": { fr: "Styles", en: "Styles", ar: "الأنماط" },
+  "profile.tab.cities": { fr: "Villes", en: "Cities", ar: "المدن" },
+  "profile.tab.portfolio": { fr: "Portfolio", en: "Portfolio", ar: "المحفظة" },
+  "profile.tab.reviews": { fr: "Avis", en: "Reviews", ar: "التقييمات" },
+  "profile.tab.business": { fr: "Coordonnées", en: "Business Info", ar: "معلومات العمل" },
+  "profile.tab.credentials": { fr: "Certifications", en: "Credentials", ar: "الشهادات" },
+
+  // Share & Save
+  "profile.share": { fr: "Partager", en: "Share", ar: "مشاركة" },
+  "profile.save": { fr: "Enregistrer", en: "Save", ar: "حفظ" },
+  "profile.saved": { fr: "Enregistré", en: "Saved", ar: "تم الحفظ" },
+  "profile.linkCopied": { fr: "Lien copié !", en: "Link copied!", ar: "تم نسخ الرابط!" },
+  "profile.shared": { fr: "Profil partagé !", en: "Profile shared!", ar: "تم مشاركة الملف!" },
+
+  // Write a review CTA
+  "reviews.writeCta": { fr: "Écrire un avis", en: "Write a Review", ar: "اكتب تقييم" },
+
+  // Business details
+  "profile.businessDetails": { fr: "Coordonnées", en: "Business Details", ar: "تفاصيل العمل" },
+  "form.website": { fr: "Site web (facultatif)", en: "Website (optional)", ar: "الموقع الإلكتروني (اختياري)" },
+  "form.websiteHint": { fr: "Ex: https://www.monsite.com", en: "e.g. https://www.mysite.com", ar: "مثال: https://www.mysite.com" },
+  "form.businessPhone": { fr: "Téléphone professionnel (facultatif)", en: "Business phone (optional)", ar: "هاتف العمل (اختياري)" },
+  "form.businessPhoneHint": { fr: "Numéro fixe ou mobile affiché sur votre profil", en: "Landline or mobile displayed on your profile", ar: "رقم ثابت أو محمول يظهر في ملفك" },
+
+  // Credentials
+  "profile.credentials": { fr: "Certifications & Accréditations", en: "Credentials & Certifications", ar: "الشهادات والاعتمادات" },
+  "form.credentials": { fr: "Certifications (facultatif)", en: "Credentials (optional)", ar: "الشهادات (اختياري)" },
+  "form.credentialsHint": { fr: "Ex: Airbnb Superhost, ISO 9001, etc. (séparées par virgule)", en: "e.g. Airbnb Superhost, ISO 9001, etc. (comma separated)", ar: "مثال: Airbnb Superhost, ISO 9001 (مفصولة بفاصلة)" },
+
+  // Saved / Favorites
+  "dashboard.savedTitle": { fr: "Mes favoris", en: "My Saved", ar: "المحفوظات" },
+  "dashboard.savedEmpty": { fr: "Vous n'avez sauvegardé aucun profil pour le moment.", en: "You haven't saved any profiles yet.", ar: "لم تحفظ أي ملفات بعد." },
+  "dashboard.savedHint": { fr: "Retrouvez ici les profils que vous avez sauvegardés en cliquant sur « Enregistrer ».", en: "Find profiles you bookmarked by clicking \"Save\" here.", ar: "اعثر على الملفات التي حفظتها بالنقر على «حفظ» هنا." },
+  "dashboard.removeSaved": { fr: "Retirer", en: "Remove", ar: "إزالة" },
+
+  // User type selection modal
+  "userType.title": { fr: "Quel est votre profil ?", en: "Which describes you best?", ar: "ما هو ملفك الشخصي؟" },
+  "userType.investor": { fr: "Investisseur / Hôte", en: "Investor / Host", ar: "مستثمر / مضيف" },
+  "userType.investorDesc": { fr: "Je cherche des prestataires pour gérer ou aménager mon bien.", en: "I'm looking for service providers to manage or furnish my property.", ar: "أبحث عن مزودي خدمات لإدارة أو تأثيث ممتلكاتي." },
+  "userType.professional": { fr: "Professionnel", en: "Professional", ar: "محترف" },
+  "userType.professionalDesc": { fr: "Je propose des services de conciergerie, ménage ou design.", en: "I offer concierge, cleaning or design services.", ar: "أقدم خدمات الكونسيرج أو التنظيف أو التصميم." },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

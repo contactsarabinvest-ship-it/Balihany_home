@@ -7,6 +7,9 @@ import { HelmetProvider } from "react-helmet-async";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { UserTypeModal } from "@/components/UserTypeModal";
+import { AuthModalProvider } from "@/contexts/AuthModalContext";
+import { LoginModal } from "@/components/LoginModal";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Index from "./pages/Index";
@@ -25,6 +28,8 @@ import ConciergeSignup from "./pages/ConciergeSignup";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Search from "./pages/Search";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +41,7 @@ const App = () => (
       <LanguageProvider>
         <Toaster />
         <Sonner />
+        <AuthModalProvider>
         <BrowserRouter>
           <div className="flex min-h-screen flex-col">
             <Header />
@@ -58,13 +64,18 @@ const App = () => (
                   <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
                   <Route path="/search" element={<Search />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<Privacy />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </ErrorBoundary>
             </div>
             <Footer />
+            <LoginModal />
+            <UserTypeModal />
           </div>
         </BrowserRouter>
+        </AuthModalProvider>
       </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>

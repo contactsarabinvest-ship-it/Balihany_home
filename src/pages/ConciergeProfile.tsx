@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { PortfolioLightbox } from "@/components/PortfolioLightbox";
 import { useParams, Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -10,7 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, MapPin, Award, ArrowLeft, ExternalLink, MessageCircle } from "lucide-react";
+import { Building2, MapPin, Award, ArrowLeft, ExternalLink, MessageCircle, Share2, Bookmark, BookmarkCheck, Phone, Globe } from "lucide-react";
+import { ReviewsSection } from "@/components/ReviewsSection";
+import { PageMeta } from "@/components/PageMeta";
+import { useSaveProfile } from "@/hooks/useSaveProfile";
+import { z } from "zod";
 
 const getInstagramUrl = (handle: string) => {
   const s = handle.trim().replace(/^@/, "").split(/[\s/]+/)[0];
@@ -19,13 +23,11 @@ const getInstagramUrl = (handle: string) => {
   return `https://instagram.com/${s}`;
 };
 
-const InstagramIcon = () => (
-  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+const InstagramIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
   </svg>
 );
-import { ReviewsSection } from "@/components/ReviewsSection";
-import { z } from "zod";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -34,6 +36,8 @@ const contactSchema = z.object({
   message: z.string().trim().min(1).max(1000),
 });
 
+const TABS = ["about", "services", "cities", "portfolio", "business", "credentials", "reviews"] as const;
+
 const ConciergeProfile = () => {
   const { id } = useParams<{ id: string }>();
   const { lang, t } = useLanguage();
@@ -41,6 +45,9 @@ const ConciergeProfile = () => {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<string>("about");
+  const { saved, toggle: toggleSave } = useSaveProfile("concierge", id);
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   const { data: company, isLoading } = useQuery({
     queryKey: ["concierge", id],
@@ -55,6 +62,42 @@ const ConciergeProfile = () => {
     },
     enabled: !!id,
   });
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveTab(entry.target.id.replace("section-", ""));
+          }
+        }
+      },
+      { rootMargin: "-120px 0px -60% 0px", threshold: 0 }
+    );
+    for (const tab of TABS) {
+      const el = document.getElementById(`section-${tab}`);
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, [company]);
+
+  const scrollTo = (tab: string) => {
+    const el = document.getElementById(`section-${tab}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: company?.name, url });
+        toast({ title: t("profile.shared") as string });
+      } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({ title: t("profile.linkCopied") as string });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,8 +126,23 @@ const ConciergeProfile = () => {
   if (isLoading) {
     return (
       <main className="py-16">
-        <div className="container max-w-4xl">
-          <div className="h-96 animate-pulse rounded-2xl bg-muted" />
+        <div className="container max-w-5xl space-y-6">
+          <div className="h-10 w-32 animate-pulse rounded-lg bg-muted" />
+          <div className="flex gap-5">
+            <div className="h-20 w-20 animate-pulse rounded-2xl bg-muted" />
+            <div className="flex-1 space-y-3">
+              <div className="h-8 w-64 animate-pulse rounded-lg bg-muted" />
+              <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+            </div>
+          </div>
+          <div className="h-px bg-border" />
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="md:col-span-2 space-y-4">
+              <div className="h-40 animate-pulse rounded-xl bg-muted" />
+              <div className="h-24 animate-pulse rounded-xl bg-muted" />
+            </div>
+            <div className="h-80 animate-pulse rounded-2xl bg-muted" />
+          </div>
         </div>
       </main>
     );
@@ -105,82 +163,207 @@ const ConciergeProfile = () => {
 
   const services = lang === "ar" ? (company.services_ar?.length ? company.services_ar : company.services_fr) : lang === "en" ? company.services_en : company.services_fr;
   const cities = lang === "ar" ? (company.cities_covered_ar?.length ? company.cities_covered_ar : company.cities_covered_fr) : lang === "en" ? company.cities_covered_en : company.cities_covered_fr;
+  const metaDesc = `${company.name} — ${getLocal(company.city_fr, company.city_en, company.city_ar)}. ${getLocal(company.description_fr, company.description_en, company.description_ar).slice(0, 120)}`;
+  const instaUrl = company.instagram ? getInstagramUrl(company.instagram) : null;
+  const hasPortfolio = (company.portfolio_photos?.length ?? 0) > 0 || (company.portfolio_urls?.length ?? 0) > 0;
+  const hasCredentials = (company.credentials?.length ?? 0) > 0;
+  const hasBusinessInfo = company.phone || company.website;
+
+  const visibleTabs = TABS.filter((tab) => {
+    if (tab === "portfolio" && !hasPortfolio) return false;
+    if (tab === "credentials" && !hasCredentials) return false;
+    if (tab === "business" && !hasBusinessInfo) return false;
+    return true;
+  });
 
   return (
-    <main className="py-16 md:py-24">
-      <div className="container max-w-4xl">
-        <Button asChild variant="ghost" className="mb-8 gap-2">
+    <main className="py-10 md:py-16">
+      <PageMeta title={company.name} description={metaDesc} />
+      <div className="container max-w-5xl">
+
+        {/* Back */}
+        <Button asChild variant="ghost" size="sm" className="mb-6 gap-2 text-muted-foreground">
           <Link to="/concierge">
             <ArrowLeft className="h-4 w-4" />
             {t("nav.concierge") as string}
           </Link>
         </Button>
 
-        <div className="grid gap-8 md:grid-cols-5">
-          <div className="md:col-span-3 space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-accent/10">
-                {company.logo_url ? (
-                  <img src={company.logo_url} alt={company.name} className="h-full w-full object-cover" />
-                ) : (
-                  <Building2 className="h-8 w-8 text-accent" />
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold">{company.name}</h1>
-                  {company.is_premium && (
-                    <Badge className="bg-accent text-accent-foreground gap-1">
-                      <Award className="h-3 w-3" />
-                      {t("concierge.premium") as string}
-                    </Badge>
-                  )}
-                </div>
-                <p className="flex items-center gap-1 text-muted-foreground mt-1">
-                  <MapPin className="h-4 w-4" />
-                  {getLocal(company.city_fr, company.city_en, company.city_ar)}
-                </p>
+        {/* Profile header */}
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-accent/10 shadow-sm">
+            {company.logo_url ? (
+              <img src={company.logo_url} alt={company.name} className="h-full w-full object-cover" />
+            ) : (
+              <Building2 className="h-10 w-10 text-accent" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight">{company.name}</h1>
+              {company.is_premium && (
+                <Badge className="bg-accent text-accent-foreground gap-1">
+                  <Award className="h-3 w-3" />
+                  {t("concierge.premium") as string}
+                </Badge>
+              )}
+            </div>
+            <p className="mt-1 flex items-center gap-1.5 text-muted-foreground">
+              <span className="text-sm font-medium">{t("nav.concierge") as string}</span>
+              <span className="text-muted-foreground/40">·</span>
+              <MapPin className="h-3.5 w-3.5" />
+              <span className="text-sm">{getLocal(company.city_fr, company.city_en, company.city_ar)}</span>
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {company.whatsapp && (
+                <a
+                  href={`https://wa.me/${company.whatsapp.replace(/[\s\-()]/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#1fb855] transition-colors"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  WhatsApp
+                </a>
+              )}
+              {instaUrl && (
+                <a
+                  href={instaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[#f09433] via-[#dc2743] to-[#bc1888] px-4 py-1.5 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+                >
+                  <InstagramIcon className="h-3.5 w-3.5" />
+                  Instagram
+                </a>
+              )}
+              <div className="ml-auto flex gap-1.5">
+                <button
+                  onClick={handleShare}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  {t("profile.share") as string}
+                </button>
+                <button
+                  onClick={toggleSave}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${saved ? "border-accent bg-accent/10 text-accent" : "border-border text-muted-foreground hover:bg-muted"}`}
+                >
+                  {saved ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
+                  {saved ? t("profile.saved") as string : t("profile.save") as string}
+                </button>
               </div>
             </div>
+          </div>
+        </div>
 
-            <p className="text-muted-foreground leading-relaxed">
-              {getLocal(company.description_fr, company.description_en, company.description_ar)}
-            </p>
+        {/* Tab navigation */}
+        <div ref={tabsRef} className="sticky top-16 z-20 -mx-4 mt-6 overflow-x-auto border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <nav className="flex gap-1">
+            {visibleTabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => scrollTo(tab)}
+                className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === tab ? "border-accent text-accent" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              >
+                {t(`profile.tab.${tab}`) as string}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-            <div>
-              <h3 className="mb-3 text-lg font-bold">{t("concierge.services") as string}</h3>
+        {/* Main content + sidebar grid */}
+        <div className="mt-8 grid gap-10 md:grid-cols-3">
+
+          {/* Left content */}
+          <div className="md:col-span-2 space-y-10">
+
+            {/* About */}
+            <section id="section-about" className="scroll-mt-28">
+              <h2 className="mb-4 border-b border-border pb-2 text-xl font-bold">
+                {t("profile.tab.about") as string}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                {getLocal(company.description_fr, company.description_en, company.description_ar)}
+              </p>
+            </section>
+
+            {/* Services */}
+            <section id="section-services" className="scroll-mt-28">
+              <h2 className="mb-4 border-b border-border pb-2 text-xl font-bold">
+                {t("concierge.services") as string}
+              </h2>
               <div className="flex flex-wrap gap-2">
                 {services?.map((s: string, i: number) => (
-                  <Badge key={i} variant="secondary">{s}</Badge>
+                  <Badge key={i} variant="secondary" className="px-3 py-1 text-sm">{s}</Badge>
                 ))}
               </div>
-            </div>
+            </section>
 
-            <div>
-              <h3 className="mb-3 text-lg font-bold">{t("concierge.cities") as string}</h3>
+            {/* Cities */}
+            <section id="section-cities" className="scroll-mt-28">
+              <h2 className="mb-4 border-b border-border pb-2 text-xl font-bold">
+                {t("concierge.cities") as string}
+              </h2>
               <div className="flex flex-wrap gap-2">
                 {cities?.map((c: string, i: number) => (
-                  <Badge key={i} variant="outline">{c}</Badge>
+                  <Badge key={i} variant="outline" className="px-3 py-1 text-sm">{c}</Badge>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Portfolio & photos section */}
-            {(company.portfolio_urls?.length > 0 || company.portfolio_photos?.length > 0) ? (
-              <div>
-                <h3 className="mb-3 text-lg font-bold">{t("concierge.portfolio") as string}</h3>
-                {company.portfolio_urls?.length > 0 && (
-                  <div className="mb-4">
-                    <p className="mb-2 text-sm font-medium text-muted-foreground">{t("concierge.portfolio.urls") as string}</p>
+            {/* Portfolio */}
+            {hasPortfolio && (
+              <section id="section-portfolio" className="scroll-mt-28">
+                <h2 className="mb-4 border-b border-border pb-2 text-xl font-bold">
+                  {t("concierge.portfolio") as string}
+                  {company.portfolio_photos?.length ? (
+                    <span className="ml-2 text-base font-normal text-muted-foreground">
+                      {company.portfolio_photos.length} {lang === "fr" ? "photo(s)" : lang === "ar" ? "صورة" : "photo(s)"}
+                    </span>
+                  ) : null}
+                </h2>
+
+                {(company.portfolio_photos?.length ?? 0) > 0 && (
+                  <div className="mb-6">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {company.portfolio_photos!.map((photoUrl: string, i: number) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setLightboxIndex(i);
+                            setLightboxOpen(true);
+                          }}
+                          className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted text-left"
+                        >
+                          <img
+                            src={photoUrl.startsWith("http") ? photoUrl : `https://${photoUrl}`}
+                            alt={`${company.name} - ${i + 1}`}
+                            loading="lazy"
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <PortfolioLightbox
+                      open={lightboxOpen}
+                      onOpenChange={setLightboxOpen}
+                      photos={company.portfolio_photos!}
+                      initialIndex={lightboxIndex}
+                      title={company.name}
+                    />
+                  </div>
+                )}
+
+                {(company.portfolio_urls?.length ?? 0) > 0 && (
+                  <div>
+                    <p className="mb-3 text-sm font-medium text-muted-foreground">{t("concierge.portfolio.urls") as string}</p>
                     <div className="flex flex-wrap gap-2">
-                      {company.portfolio_urls.map((url: string, i: number) => {
+                      {company.portfolio_urls!.map((url: string, i: number) => {
                         const href = url.startsWith("http") ? url : `https://${url}`;
                         let label = url;
-                        try {
-                          label = new URL(href).hostname;
-                        } catch {
-                          label = url.length > 30 ? `${url.slice(0, 27)}...` : url;
-                        }
+                        try { label = new URL(href).hostname; } catch { label = url.length > 30 ? `${url.slice(0, 27)}...` : url; }
                         return (
                           <a
                             key={i}
@@ -197,88 +380,89 @@ const ConciergeProfile = () => {
                     </div>
                   </div>
                 )}
-                {company.portfolio_photos?.length > 0 && (
-                  <div>
-                    <p className="mb-3 text-sm font-medium text-muted-foreground">{t("concierge.portfolio.photos") as string}</p>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      {company.portfolio_photos.map((photoUrl: string, i: number) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => {
-                            setLightboxIndex(i);
-                            setLightboxOpen(true);
-                          }}
-                          className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted text-left"
-                        >
-                          <img
-                            src={photoUrl.startsWith("http") ? photoUrl : `https://${photoUrl}`}
-                            alt={`${company.name} - ${i + 1}`}
-                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                          />
-                        </button>
-                      ))}
+              </section>
+            )}
+
+            {/* Business Details */}
+            {hasBusinessInfo && (
+              <section id="section-business" className="scroll-mt-28">
+                <h2 className="mb-4 border-b border-border pb-2 text-xl font-bold">
+                  {t("profile.businessDetails") as string}
+                </h2>
+                <div className="space-y-3">
+                  {company.phone && (
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <a href={`tel:${company.phone}`} className="text-sm hover:underline">{company.phone}</a>
                     </div>
-                    <PortfolioLightbox
-                      open={lightboxOpen}
-                      onOpenChange={setLightboxOpen}
-                      photos={company.portfolio_photos}
-                      initialIndex={lightboxIndex}
-                      title={company.name}
-                    />
+                  )}
+                  {company.website && (
+                    <div className="flex items-center gap-3">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <a
+                        href={company.website.startsWith("http") ? company.website : `https://${company.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-accent hover:underline"
+                      >
+                        {company.website}
+                      </a>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{getLocal(company.city_fr, company.city_en, company.city_ar)}</span>
                   </div>
-                )}
-              </div>
-            ) : null}
+                </div>
+              </section>
+            )}
+
+            {/* Credentials */}
+            {hasCredentials && (
+              <section id="section-credentials" className="scroll-mt-28">
+                <h2 className="mb-4 border-b border-border pb-2 text-xl font-bold">
+                  {t("profile.credentials") as string}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {company.credentials!.map((cred: string, i: number) => (
+                    <Badge key={i} variant="secondary" className="gap-1.5 px-3 py-1.5 text-sm">
+                      <Award className="h-3.5 w-3.5 text-amber-500" />
+                      {cred}
+                    </Badge>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Reviews */}
+            <section id="section-reviews" className="scroll-mt-28">
+              <ReviewsSection conciergeCompanyId={company.id} />
+            </section>
           </div>
 
-          <div className="md:col-span-2 space-y-4">
-            {company.whatsapp && (
-              <a
-                href={`https://wa.me/${company.whatsapp.replace(/[\s\-()]/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-white font-semibold hover:bg-[#1fb855] transition-colors"
-              >
-                <MessageCircle className="h-5 w-5" />
-                {t("profile.whatsapp") as string}
-              </a>
-            )}
-            {company.instagram && (() => {
-              const instaUrl = getInstagramUrl(company.instagram);
-              return instaUrl ? (
-                <a
-                  href={instaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-[#f09433] via-[#dc2743] to-[#bc1888] px-6 py-3 text-white font-semibold hover:opacity-90 transition-opacity"
-                  title={t("profile.instagram") as string}
-                >
-                  <InstagramIcon />
-                  Instagram
-                </a>
-              ) : null;
-            })()}
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-lg">{t("concierge.cta.contact") as string}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="grid gap-4">
-                  <Input placeholder={t("form.name") as string} value={form.name} onChange={(e) => update("name", e.target.value)} required className="rounded-lg" />
-                  <Input type="email" placeholder={t("form.email") as string} value={form.email} onChange={(e) => update("email", e.target.value)} required className="rounded-lg" />
-                  <Input placeholder={t("form.phone") as string} value={form.phone} onChange={(e) => update("phone", e.target.value)} required className="rounded-lg" />
-                  <Textarea placeholder={t("form.message") as string} value={form.message} onChange={(e) => update("message", e.target.value)} required className="rounded-lg" />
-                  <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 rounded-full">
-                    {t("concierge.cta.contact") as string}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+          {/* Sidebar */}
+          <div className="md:col-span-1">
+            <div className="md:sticky md:top-24 space-y-4">
+              <Card className="rounded-2xl shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">{t("concierge.cta.contact") as string}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="grid gap-3">
+                    <Input placeholder={t("form.name") as string} value={form.name} onChange={(e) => update("name", e.target.value)} required className="rounded-lg" />
+                    <Input type="email" placeholder={t("form.email") as string} value={form.email} onChange={(e) => update("email", e.target.value)} required className="rounded-lg" />
+                    <Input placeholder={t("form.phone") as string} value={form.phone} onChange={(e) => update("phone", e.target.value)} required className="rounded-lg" />
+                    <Textarea placeholder={t("form.message") as string} value={form.message} onChange={(e) => update("message", e.target.value)} required rows={3} className="rounded-lg" />
+                    <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 rounded-full">
+                      {t("concierge.cta.contact") as string}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
 
-        <ReviewsSection conciergeCompanyId={company.id} />
       </div>
     </main>
   );

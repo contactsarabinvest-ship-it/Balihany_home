@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogoUpload, PortfolioUpload } from "@/components/ImageUpload";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, Clock, CheckCircle, Pencil, ExternalLink, Paintbrush, Sparkles } from "lucide-react";
+import { Building2, Clock, CheckCircle, Pencil, ExternalLink, Paintbrush, Sparkles, Bookmark, MapPin, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -32,6 +32,9 @@ type ConciergeEditForm = {
   portfolioPhotoUrls: string[];
   whatsapp: string;
   instagram: string;
+  website: string;
+  phone: string;
+  credentials: string;
 };
 
 type DesignerEditForm = {
@@ -46,6 +49,9 @@ type DesignerEditForm = {
   portfolioPhotoUrls: string[];
   whatsapp: string;
   instagram: string;
+  website: string;
+  phone: string;
+  credentials: string;
 };
 
 type MenageEditForm = {
@@ -60,6 +66,9 @@ type MenageEditForm = {
   portfolioPhotoUrls: string[];
   whatsapp: string;
   instagram: string;
+  website: string;
+  phone: string;
+  credentials: string;
 };
 
 const Dashboard = () => {
@@ -126,6 +135,62 @@ const Dashboard = () => {
     enabled: !!userId,
   });
 
+  const { data: savedRows, refetch: refetchSaved } = useQuery({
+    queryKey: ["saved-profiles", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data } = await supabase.from("saved_profiles").select("*").eq("user_id", userId);
+      return data ?? [];
+    },
+    enabled: !!userId,
+  });
+
+  const savedConciergeIds = (savedRows ?? []).filter((s) => s.profile_type === "concierge").map((s) => s.profile_id);
+  const savedMenageIds = (savedRows ?? []).filter((s) => s.profile_type === "menage").map((s) => s.profile_id);
+  const savedDesignerIds = (savedRows ?? []).filter((s) => s.profile_type === "designer").map((s) => s.profile_id);
+
+  const { data: savedConcierges } = useQuery({
+    queryKey: ["saved-concierges", savedConciergeIds],
+    queryFn: async () => {
+      if (savedConciergeIds.length === 0) return [];
+      const { data } = await supabase.from("concierge_companies").select("id, name, logo_url, city_fr, city_en, city_ar").in("id", savedConciergeIds);
+      return data ?? [];
+    },
+    enabled: savedConciergeIds.length > 0,
+  });
+
+  const { data: savedMenages } = useQuery({
+    queryKey: ["saved-menages", savedMenageIds],
+    queryFn: async () => {
+      if (savedMenageIds.length === 0) return [];
+      const { data } = await supabase.from("menage_companies").select("id, name, logo_url, city_fr, city_en, city_ar").in("id", savedMenageIds);
+      return data ?? [];
+    },
+    enabled: savedMenageIds.length > 0,
+  });
+
+  const { data: savedDesigners } = useQuery({
+    queryKey: ["saved-designers", savedDesignerIds],
+    queryFn: async () => {
+      if (savedDesignerIds.length === 0) return [];
+      const { data } = await supabase.from("designers").select("id, name, logo_url, city_fr, city_en, city_ar").in("id", savedDesignerIds);
+      return data ?? [];
+    },
+    enabled: savedDesignerIds.length > 0,
+  });
+
+  const removeSaved = async (type: string, profileId: string) => {
+    if (!userId) return;
+    await supabase.from("saved_profiles").delete().eq("user_id", userId).eq("profile_type", type).eq("profile_id", profileId);
+    refetchSaved();
+  };
+
+  const allSaved = [
+    ...(savedConcierges ?? []).map((c) => ({ ...c, _type: "concierge" as const, _path: `/concierge/${c.id}` })),
+    ...(savedMenages ?? []).map((m) => ({ ...m, _type: "menage" as const, _path: `/menage/${m.id}` })),
+    ...(savedDesigners ?? []).map((d) => ({ ...d, _type: "designer" as const, _path: `/designers/${d.id}` })),
+  ];
+
   const getLocalField = (fr: string, en: string, ar: string) => {
     if (lang === "ar") return ar || fr;
     if (lang === "en") return en || fr;
@@ -148,6 +213,9 @@ const Dashboard = () => {
       portfolioPhotoUrls: pending,
       whatsapp: c.whatsapp ?? "",
       instagram: c.instagram ?? "",
+      website: c.website ?? "",
+      phone: c.phone ?? "",
+      credentials: (c.credentials ?? []).join(", "),
     });
     setDesignerForm(null);
     setMenageForm(null);
@@ -169,6 +237,9 @@ const Dashboard = () => {
       portfolioPhotoUrls: pending,
       whatsapp: d.whatsapp ?? "",
       instagram: d.instagram ?? "",
+      website: d.website ?? "",
+      phone: d.phone ?? "",
+      credentials: (d.credentials ?? []).join(", "),
     });
     setConciergeForm(null);
     setMenageForm(null);
@@ -190,6 +261,9 @@ const Dashboard = () => {
       portfolioPhotoUrls: pending,
       whatsapp: m.whatsapp ?? "",
       instagram: m.instagram ?? "",
+      website: m.website ?? "",
+      phone: m.phone ?? "",
+      credentials: (m.credentials ?? []).join(", "),
     });
     setConciergeForm(null);
     setDesignerForm(null);
@@ -235,6 +309,9 @@ const Dashboard = () => {
         portfolio_photos_pending: portfolioPhotosPending,
         whatsapp: conciergeForm.whatsapp.trim() || null,
         instagram: conciergeForm.instagram.trim() || null,
+        website: conciergeForm.website.trim() || null,
+        phone: conciergeForm.phone.trim() || null,
+        credentials: conciergeForm.credentials.split(",").map(s => s.trim()).filter(Boolean).length > 0 ? conciergeForm.credentials.split(",").map(s => s.trim()).filter(Boolean) : null,
       })
       .eq("id", editingId);
 
@@ -278,6 +355,9 @@ const Dashboard = () => {
         portfolio_photos_pending: portfolioPhotosPending,
         whatsapp: designerForm.whatsapp.trim() || null,
         instagram: designerForm.instagram.trim() || null,
+        website: designerForm.website.trim() || null,
+        phone: designerForm.phone.trim() || null,
+        credentials: designerForm.credentials.split(",").map(s => s.trim()).filter(Boolean).length > 0 ? designerForm.credentials.split(",").map(s => s.trim()).filter(Boolean) : null,
       })
       .eq("id", editingId);
 
@@ -324,6 +404,9 @@ const Dashboard = () => {
         portfolio_photos_pending: portfolioPhotosPending,
         whatsapp: menageForm.whatsapp.trim() || null,
         instagram: menageForm.instagram.trim() || null,
+        website: menageForm.website.trim() || null,
+        phone: menageForm.phone.trim() || null,
+        credentials: menageForm.credentials.split(",").map(s => s.trim()).filter(Boolean).length > 0 ? menageForm.credentials.split(",").map(s => s.trim()).filter(Boolean) : null,
       })
       .eq("id", editingId);
 
@@ -358,7 +441,7 @@ const Dashboard = () => {
   }, [companies?.length, designers?.length, menageCompanies?.length]);
 
   const renderEditFormFields = (
-    form: { name: string; city: string; description: string; logoUrl: string | null; portfolioUrls: string; portfolioPhotos: string; portfolioPhotoUrls: string[]; whatsapp: string; instagram: string },
+    form: { name: string; city: string; description: string; logoUrl: string | null; portfolioUrls: string; portfolioPhotos: string; portfolioPhotoUrls: string[]; whatsapp: string; instagram: string; website: string; phone: string; credentials: string },
     setForm: (fn: (prev: any) => any) => void,
     approvedPhotos: string[],
   ) => (
@@ -387,6 +470,37 @@ const Dashboard = () => {
           className="rounded-lg"
         />
         <p className="text-xs text-muted-foreground mt-1">{t("form.instagramHint") as string}</p>
+      </div>
+      <div>
+        <Label className="mb-1.5 block text-sm">{t("form.website") as string}</Label>
+        <Input
+          placeholder="https://www.example.com"
+          value={form.website}
+          onChange={(e) => setForm((f: any) => (f ? { ...f, website: e.target.value } : f))}
+          className="rounded-lg"
+        />
+        <p className="text-xs text-muted-foreground mt-1">{t("form.websiteHint") as string}</p>
+      </div>
+      <div>
+        <Label className="mb-1.5 block text-sm">{t("form.businessPhone") as string}</Label>
+        <Input
+          type="tel"
+          placeholder="+212 5XX XX XX XX"
+          value={form.phone}
+          onChange={(e) => setForm((f: any) => (f ? { ...f, phone: e.target.value } : f))}
+          className="rounded-lg"
+        />
+        <p className="text-xs text-muted-foreground mt-1">{t("form.businessPhoneHint") as string}</p>
+      </div>
+      <div>
+        <Label className="mb-1.5 block text-sm">{t("form.credentials") as string}</Label>
+        <Input
+          placeholder="Airbnb Superhost, ISO 9001, ..."
+          value={form.credentials}
+          onChange={(e) => setForm((f: any) => (f ? { ...f, credentials: e.target.value } : f))}
+          className="rounded-lg"
+        />
+        <p className="text-xs text-muted-foreground mt-1">{t("form.credentialsHint") as string}</p>
       </div>
       <div>
         <Label className="mb-1.5 block text-sm">{t("form.city") as string}</Label>
@@ -612,7 +726,7 @@ const Dashboard = () => {
         )}
 
         {designers && designers.length > 0 && (
-          <div>
+          <div className="mb-8">
             <h2 className="mb-4 text-lg font-semibold text-foreground">{t("signup.type.designer") as string}</h2>
             <div className="space-y-4">
           {designers.map((d) => (
@@ -677,6 +791,71 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+        {/* Saved profiles */}
+        <div className="mt-4 border-t pt-8">
+          <div className="mb-4 flex items-center gap-2">
+            <Bookmark className="h-5 w-5 text-accent" />
+            <h2 className="text-lg font-semibold text-foreground">{t("dashboard.savedTitle") as string}</h2>
+          </div>
+          <p className="mb-4 text-sm text-muted-foreground">{t("dashboard.savedHint") as string}</p>
+
+          {allSaved.length === 0 ? (
+            <Card className="rounded-2xl border-dashed">
+              <CardContent className="flex items-center justify-center py-8">
+                <p className="text-sm text-muted-foreground">{t("dashboard.savedEmpty") as string}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {allSaved.map((item) => (
+                <Card key={`${item._type}-${item.id}`} className="rounded-xl">
+                  <CardContent className="flex items-center gap-3 py-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-accent/10">
+                      {item.logo_url ? (
+                        <img src={item.logo_url} alt={item.name} className="h-full w-full object-cover" />
+                      ) : item._type === "designer" ? (
+                        <Paintbrush className="h-5 w-5 text-terracotta" />
+                      ) : item._type === "menage" ? (
+                        <Sparkles className="h-5 w-5 text-accent" />
+                      ) : (
+                        <Building2 className="h-5 w-5 text-accent" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link to={item._path} className="font-medium text-sm hover:underline truncate block">
+                        {item.name}
+                      </Link>
+                      <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {getLocalField(item.city_fr, item.city_en, item.city_ar)}
+                        <span className="text-muted-foreground/40 mx-1">·</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          {item._type === "concierge" ? t("signup.type.concierge") as string : item._type === "menage" ? t("signup.type.menage") as string : t("signup.type.designer") as string}
+                        </Badge>
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full">
+                        <Link to={item._path}>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full text-muted-foreground hover:text-destructive"
+                        onClick={() => removeSaved(item._type, item.id)}
+                        title={t("dashboard.removeSaved") as string}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );

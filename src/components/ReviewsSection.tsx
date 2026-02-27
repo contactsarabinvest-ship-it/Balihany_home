@@ -84,9 +84,26 @@ export function ReviewsSection({ conciergeCompanyId, designerId, menageCompanyId
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
+  const scrollToForm = () => {
+    const el = document.getElementById("review-form");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   return (
     <section className="mt-12 pt-8 border-t">
-      <h2 className="text-xl font-bold mb-6">{t("reviews.title") as string}</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold">{t("reviews.title") as string}</h2>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-1.5 rounded-full"
+          onClick={scrollToForm}
+        >
+          <Star className="h-3.5 w-3.5" />
+          {t("reviews.writeCta") as string}
+        </Button>
+      </div>
 
       {avgRating && (
         <div className="flex items-center gap-2 mb-6">
@@ -135,7 +152,7 @@ export function ReviewsSection({ conciergeCompanyId, designerId, menageCompanyId
         )}
       </div>
 
-      <Card className="rounded-2xl">
+      <Card id="review-form" className="rounded-2xl scroll-mt-28">
         <CardHeader>
           <CardTitle className="text-lg">{t("reviews.submitTitle") as string}</CardTitle>
           <p className="text-sm text-muted-foreground">{t("reviews.submitHint") as string}</p>

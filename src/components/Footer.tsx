@@ -68,8 +68,8 @@ const Footer = () => {
         <div className="mt-10 flex flex-col items-center gap-2 border-t border-primary-foreground/20 pt-6 text-center text-sm opacity-60 sm:flex-row sm:justify-between">
           <span>© {new Date().getFullYear()} Balihany. {t("footer.rights") as string}</span>
           <div className="flex gap-4">
-            <Link to="#" className="hover:opacity-100 transition-opacity">{t("footer.terms") as string}</Link>
-            <Link to="#" className="hover:opacity-100 transition-opacity">{t("footer.privacy") as string}</Link>
+            <Link to="/terms" className="hover:opacity-100 transition-opacity">{t("footer.terms") as string}</Link>
+            <Link to="/privacy" className="hover:opacity-100 transition-opacity">{t("footer.privacy") as string}</Link>
           </div>
         </div>
       </div>
