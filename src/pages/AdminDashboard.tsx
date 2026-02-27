@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Sparkles, Mail, Calculator, Star, MessageSquare, Trash2, ShoppingBag, Plus, Pencil, ToggleLeft, ToggleRight } from "lucide-react";
+import { Shield, Check, X, ArrowLeft, ImageIcon, Building2, Paintbrush, Sparkles, Mail, Calculator, Star, MessageSquare, Trash2, ShoppingBag, Plus, Pencil, ToggleLeft, ToggleRight, Search, Ban } from "lucide-react";
 
 const AdminDashboard = () => {
   const { t } = useLanguage();
@@ -34,6 +34,7 @@ const AdminDashboard = () => {
   const [processing, setProcessing] = useState<string | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<{ type: "contact" | "calculator"; id: string } | null>(null);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [seenCounts, setSeenCounts] = useState<Record<string, number>>(() => {
     try {
       const stored = localStorage.getItem("admin-seen-counts");
@@ -412,6 +413,7 @@ const AdminDashboard = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-pending-companies"] });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-designers"] });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-menage"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-all-submissions"] });
   };
 
   const rejectCompany = async (id: string, type: "concierge" | "designer" | "menage") => {
@@ -424,6 +426,39 @@ const AdminDashboard = () => {
       return;
     }
     toast({ title: `${type} rejected` });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-companies"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-designers"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-menage"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-all-submissions"] });
+  };
+
+  const disableCompany = async (id: string, type: "concierge" | "designer" | "menage") => {
+    setProcessing(`disable-${type}-${id}`);
+    const table = getTableName(type);
+    const { error } = await supabase.from(table).update({ status: "rejected" }).eq("id", id);
+    setProcessing(null);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Profil désactivé" });
+    queryClient.invalidateQueries({ queryKey: ["admin-all-submissions"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-companies"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-designers"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-menage"] });
+  };
+
+  const reactivateCompany = async (id: string, type: "concierge" | "designer" | "menage") => {
+    setProcessing(`reactivate-${type}-${id}`);
+    const table = getTableName(type);
+    const { error } = await supabase.from(table).update({ status: "approved" }).eq("id", id);
+    setProcessing(null);
+    if (error) {
+      toast({ title: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Profil réactivé" });
+    queryClient.invalidateQueries({ queryKey: ["admin-all-submissions"] });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-companies"] });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-designers"] });
     queryClient.invalidateQueries({ queryKey: ["admin-pending-menage"] });
@@ -582,89 +617,139 @@ const AdminDashboard = () => {
             <p className="text-sm text-muted-foreground">
               Toutes les demandes d&apos;inscription (conciergerie, ménage, designers) avec leur statut.
             </p>
-            {!allSubmissions?.length ? (
-              <Card className="rounded-2xl">
-                <CardContent className="py-12 text-center">
-                  <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <p className="text-muted-foreground">Aucune inscription trouvée.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {allSubmissions.map((item) => (
-                  <Card key={`${item.type}-${item.id}`} className="rounded-xl">
-                    <CardHeader className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${item.type === "designer" ? "bg-terracotta-light" : "bg-accent/10"}`}>
-                          {item.type === "concierge" ? (
-                            <Building2 className="h-5 w-5 text-accent" />
-                          ) : item.type === "menage" ? (
-                            <Sparkles className="h-5 w-5 text-accent" />
-                          ) : (
-                            <Paintbrush className="h-5 w-5 text-terracotta" />
-                          )}
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher par nom, ville ou type..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            {(() => {
+              const q = searchQuery.toLowerCase().trim();
+              const filtered = (allSubmissions ?? []).filter((item) => {
+                if (!q) return true;
+                const typeLabel = item.type === "concierge" ? "conciergerie" : item.type === "menage" ? "ménage" : "designer";
+                return (
+                  item.name?.toLowerCase().includes(q) ||
+                  item.city_fr?.toLowerCase().includes(q) ||
+                  typeLabel.includes(q) ||
+                  item.status?.toLowerCase().includes(q)
+                );
+              });
+              return !filtered.length ? (
+                <Card className="rounded-2xl">
+                  <CardContent className="py-12 text-center">
+                    <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                      {q ? "Aucun résultat pour cette recherche." : "Aucune inscription trouvée."}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {filtered.map((item) => (
+                    <Card key={`${item.type}-${item.id}`} className="rounded-xl">
+                      <CardHeader className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${item.type === "designer" ? "bg-terracotta-light" : "bg-accent/10"}`}>
+                            {item.type === "concierge" ? (
+                              <Building2 className="h-5 w-5 text-accent" />
+                            ) : item.type === "menage" ? (
+                              <Sparkles className="h-5 w-5 text-accent" />
+                            ) : (
+                              <Paintbrush className="h-5 w-5 text-terracotta" />
+                            )}
+                          </div>
+                          <div>
+                            <CardTitle className="text-base">{item.name}</CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              {item.city_fr} • {item.type === "concierge" ? "Conciergerie" : item.type === "menage" ? "Ménage" : "Designer"}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <CardTitle className="text-base">{item.name}</CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            {item.city_fr} • {item.type === "concierge" ? "Conciergerie" : item.type === "menage" ? "Ménage" : "Designer"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge
-                          variant={
-                            item.status === "approved"
-                              ? "default"
-                              : item.status === "rejected"
-                                ? "destructive"
-                                : "secondary"
-                          }
-                        >
-                          {item.status === "approved" ? "Approuvé" : item.status === "rejected" ? "Rejeté" : "En attente"}
-                        </Badge>
-                        <Button asChild variant="ghost" size="sm" className="rounded-full">
-                          <Link
-                            to={
-                              item.type === "concierge"
-                                ? `/concierge/${item.id}`
-                                : item.type === "menage"
-                                  ? `/menage/${item.id}`
-                                  : `/designers/${item.id}`
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge
+                            variant={
+                              item.status === "approved"
+                                ? "default"
+                                : item.status === "rejected"
+                                  ? "destructive"
+                                  : "secondary"
                             }
                           >
-                            Voir
-                          </Link>
-                        </Button>
-                        {item.status === "pending" && (
-                          <>
-                            <Button
-                              size="sm"
-                              className="gap-1.5 rounded-full bg-green-600 hover:bg-green-700"
-                              onClick={() => approveCompany(item.id, item.type)}
-                              disabled={!!processing}
+                            {item.status === "approved" ? "Approuvé" : item.status === "rejected" ? "Rejeté" : "En attente"}
+                          </Badge>
+                          <Button asChild variant="ghost" size="sm" className="rounded-full">
+                            <Link
+                              to={
+                                item.type === "concierge"
+                                  ? `/concierge/${item.id}`
+                                  : item.type === "menage"
+                                    ? `/menage/${item.id}`
+                                    : `/designers/${item.id}`
+                              }
                             >
-                              <Check className="h-4 w-4" />
-                              Approuver
-                            </Button>
+                              Voir
+                            </Link>
+                          </Button>
+                          {item.status === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                className="gap-1.5 rounded-full bg-green-600 hover:bg-green-700"
+                                onClick={() => approveCompany(item.id, item.type)}
+                                disabled={!!processing}
+                              >
+                                <Check className="h-4 w-4" />
+                                Approuver
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 rounded-full text-destructive hover:bg-destructive/10"
+                                onClick={() => rejectCompany(item.id, item.type)}
+                                disabled={!!processing}
+                              >
+                                <X className="h-4 w-4" />
+                                Rejeter
+                              </Button>
+                            </>
+                          )}
+                          {item.status === "approved" && (
                             <Button
                               size="sm"
                               variant="outline"
-                              className="gap-1.5 rounded-full text-destructive hover:bg-destructive/10"
-                              onClick={() => rejectCompany(item.id, item.type)}
+                              className="gap-1.5 rounded-full text-orange-600 hover:bg-orange-50"
+                              onClick={() => disableCompany(item.id, item.type)}
                               disabled={!!processing}
                             >
-                              <X className="h-4 w-4" />
-                              Rejeter
+                              <Ban className="h-4 w-4" />
+                              Désactiver
                             </Button>
-                          </>
-                        )}
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            )}
+                          )}
+                          {item.status === "rejected" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 rounded-full text-green-600 hover:bg-green-50"
+                              onClick={() => reactivateCompany(item.id, item.type)}
+                              disabled={!!processing}
+                            >
+                              <Check className="h-4 w-4" />
+                              Réactiver
+                            </Button>
+                          )}
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="companies" className="space-y-6">

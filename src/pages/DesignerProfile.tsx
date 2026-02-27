@@ -234,7 +234,7 @@ const DesignerProfile = () => {
                   Instagram
                 </a>
               )}
-              <div className="ml-auto flex gap-1.5">
+              <div className="hidden sm:ml-auto sm:flex gap-1.5">
                 <button onClick={handleShare} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
                   <Share2 className="h-3.5 w-3.5" />
                   {t("profile.share") as string}
@@ -244,6 +244,16 @@ const DesignerProfile = () => {
                   {saved ? t("profile.saved") as string : t("profile.save") as string}
                 </button>
               </div>
+            </div>
+            <div className="mt-2 flex gap-1.5 sm:hidden">
+              <button onClick={handleShare} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
+                <Share2 className="h-3.5 w-3.5" />
+                {t("profile.share") as string}
+              </button>
+              <button onClick={toggleSave} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${saved ? "border-accent bg-accent/10 text-accent" : "border-border text-muted-foreground hover:bg-muted"}`}>
+                {saved ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
+                {saved ? t("profile.saved") as string : t("profile.save") as string}
+              </button>
             </div>
           </div>
         </div>
